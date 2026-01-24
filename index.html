@@ -424,6 +424,22 @@
             border-radius: 4px;
         }
 
+        /* Calculator Preview */
+        .calculator-preview {
+            width: 100%;
+            height: 700px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--bg-main);
+        }
+
+        .calculator-preview iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
         /* Stats Cards */
         .stats-grid {
             display: grid;
@@ -519,19 +535,19 @@
                 </div>
                 <nav class="sidebar-nav">
                     <div class="nav-item active" onclick="showSection('settings')">
-                        <span class="nav-icon">⚙️</span>
+                        <span class="nav-icon">⚙</span>
                         Business Settings
                     </div>
                     <div class="nav-item" onclick="showSection('services')">
-                        <span class="nav-icon">📦</span>
+                        <span class="nav-icon">◆</span>
                         Services
                     </div>
                     <div class="nav-item" onclick="showSection('calculator')">
-                        <span class="nav-icon">🔗</span>
+                        <span class="nav-icon">◉</span>
                         Calculator Link
                     </div>
                     <div class="nav-item" onclick="logout()" style="margin-top: 16px; color: var(--danger);">
-                        <span class="nav-icon">🚪</span>
+                        <span class="nav-icon">→</span>
                         Logout
                     </div>
                 </nav>
@@ -674,9 +690,21 @@
                             <div class="url-label">Your unique calculator URL:</div>
                             <div class="url-display" id="calculatorUrl">Loading...</div>
                             <div class="url-actions">
-                                <button class="btn btn-primary" onclick="copyUrl()">📋 Copy Link</button>
-                                <button class="btn btn-secondary" onclick="openCalculator()">🔗 Open Calculator</button>
+                                <button class="btn btn-primary" onclick="copyUrl()">Copy Link</button>
+                                <button class="btn btn-secondary" onclick="openCalculator()">Open in New Tab</button>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Calculator Preview</h3>
+                                <p class="card-description">This is how your calculator will look to customers</p>
+                            </div>
+                        </div>
+                        <div class="calculator-preview">
+                            <iframe id="calculatorIframe" frameborder="0"></iframe>
                         </div>
                     </div>
                 </div>
@@ -854,7 +882,7 @@
             if (snapshot.empty) {
                 servicesList.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">📦</div>
+                        <div class="empty-state-icon">◆</div>
                         <h3>No services yet</h3>
                         <p>Add your first service below to get started</p>
                     </div>
@@ -924,6 +952,8 @@
             if (!currentUser) return;
             const calculatorUrl = `https://logicnerds.github.io/quoteui/?id=${currentUser.uid}`;
             document.getElementById('calculatorUrl').textContent = calculatorUrl;
+            // Update iframe
+            document.getElementById('calculatorIframe').src = calculatorUrl;
         }
 
         function copyUrl() {
