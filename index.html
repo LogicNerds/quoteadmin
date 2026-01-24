@@ -512,6 +512,37 @@
             border-radius: 4px;
         }
 
+        .logo-upload-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .upload-progress {
+            margin-top: 12px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-main);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
         /* Calculator Preview */
         .calculator-preview {
             width: 100%;
@@ -762,8 +793,21 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Logo URL <span class="label-hint">(optional)</span></label>
-                            <input type="url" id="logoUrl" placeholder="https://...">
+                            <label>Logo</label>
+                            <div class="logo-upload-container">
+                                <input type="file" id="logoFile" accept="image/*" style="display: none;" onchange="handleLogoUpload(event)">
+                                <button type="button" class="btn btn-secondary" onclick="document.getElementById('logoFile').click()">
+                                    Upload Logo
+                                </button>
+                                <span class="label-hint" style="margin: 0 12px;">or</span>
+                                <input type="url" id="logoUrl" placeholder="https://example.com/logo.png" style="flex: 1;">
+                            </div>
+                            <div id="uploadProgress" class="upload-progress hidden">
+                                <div class="progress-bar">
+                                    <div id="progressFill" class="progress-fill"></div>
+                                </div>
+                                <span id="progressText" class="progress-text">Uploading...</span>
+                            </div>
                         </div>
 
                         <div id="logoPreviewContainer" class="logo-preview-container hidden">
@@ -928,10 +972,11 @@
 
     <!-- Firebase SDK -->
     <script type="module">
-        // FIREBASE CONFIGURATION - REPLACE WITH YOUR CREDENTIALS
+        // FIREBASE CONFIGURATION
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyC1M0mrF7xBEZ_6zalErf-xWDrNDfzD_pI",
@@ -945,9 +990,11 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
         window.auth = auth;
         window.db = db;
+        window.storage = storage;
         window.currentUser = null;
 
         // Auth state listener
@@ -1033,6 +1080,86 @@
                 alert('✓ Quote page saved successfully!');
             } catch (error) {
                 alert('Error saving: ' + error.message);
+            }
+        }
+
+        // Logo Upload
+        async function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload an image file');
+                return;
+            }
+
+            // Validate file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('File size must be less than 2MB');
+                return;
+            }
+
+            if (!currentUser) {
+                alert('Please log in to upload');
+                return;
+            }
+
+            const progressContainer = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            progressContainer.classList.remove('hidden');
+            progressText.textContent = 'Uploading...';
+
+            try {
+                // Create storage reference
+                const storageRef = ref(storage, `logos/${currentUser.uid}/${file.name}`);
+                
+                // Upload file with progress tracking
+                const uploadTask = uploadBytesResumable(storageRef, file);
+
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        // Progress
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        progressFill.style.width = progress + '%';
+                        progressText.textContent = `Uploading... ${Math.round(progress)}%`;
+                    },
+                    (error) => {
+                        // Error
+                        console.error('Upload error:', error);
+                        alert('Upload failed: ' + error.message);
+                        progressContainer.classList.add('hidden');
+                    },
+                    async () => {
+                        // Complete
+                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                        
+                        // Update logo URL field
+                        document.getElementById('logoUrl').value = downloadURL;
+                        
+                        // Show preview
+                        document.getElementById('logoPreview').src = downloadURL;
+                        document.getElementById('logoPreviewContainer').classList.remove('hidden');
+                        
+                        // Auto-save to business settings
+                        await setDoc(doc(db, 'businesses', currentUser.uid), {
+                            logoUrl: downloadURL,
+                            updatedAt: new Date().toISOString()
+                        }, { merge: true });
+
+                        progressText.textContent = 'Upload complete!';
+                        setTimeout(() => {
+                            progressContainer.classList.add('hidden');
+                            progressFill.style.width = '0%';
+                        }, 2000);
+                    }
+                );
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error uploading logo: ' + error.message);
+                progressContainer.classList.add('hidden');
             }
         }
 
@@ -1253,6 +1380,7 @@
         window.signup = signup;
         window.login = login;
         window.logout = logout;
+        window.handleLogoUpload = handleLogoUpload;
         window.saveBusinessSettings = saveBusinessSettings;
         window.addService = addService;
         window.toggleServiceActive = toggleServiceActive;
@@ -1262,6 +1390,11 @@
         window.copyEmbedCode = copyEmbedCode;
         window.openCalculator = openCalculator;
         window.saveQuotePage = saveQuotePage;
+
+        // Import storage functions for global use
+        window.storageRef = ref;
+        window.uploadBytesResumable = uploadBytesResumable;
+        window.getDownloadURL = getDownloadURL;
 
         // Color preview updates
         document.getElementById('primaryColor')?.addEventListener('input', (e) => {
