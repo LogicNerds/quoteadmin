@@ -440,6 +440,25 @@
             border: none;
         }
 
+        /* Quote Page Grid Layout */
+        .quote-page-grid {
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .quote-page-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .quote-page-preview {
+            position: sticky;
+            top: 24px;
+        }
+
         /* Landing Page Preview */
         .landing-preview {
             background: var(--bg-main);
@@ -524,6 +543,14 @@
             .form-row {
                 grid-template-columns: 1fr;
             }
+
+            .quote-page-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quote-page-preview {
+                position: static;
+            }
         }
 
         @media (max-width: 768px) {
@@ -575,19 +602,15 @@
                 <nav class="sidebar-nav">
                     <div class="nav-item active" onclick="showSection('settings')">
                         <span class="nav-icon">⚙</span>
-                        Business Settings
+                        My Business
                     </div>
                     <div class="nav-item" onclick="showSection('services')">
                         <span class="nav-icon">◆</span>
-                        Services
+                        My Products & Services
                     </div>
-                    <div class="nav-item" onclick="showSection('landing')">
-                        <span class="nav-icon">▣</span>
-                        Landing Page
-                    </div>
-                    <div class="nav-item" onclick="showSection('calculator')">
+                    <div class="nav-item" onclick="showSection('quotepage')">
                         <span class="nav-icon">◉</span>
-                        Calculator Link
+                        My Quote Page
                     </div>
                     <div class="nav-item" onclick="logout()" style="margin-top: 16px; color: var(--danger);">
                         <span class="nav-icon">→</span>
@@ -602,7 +625,7 @@
                 <div id="settingsSection">
                     <div class="top-bar">
                         <div>
-                            <h1 class="page-title">Business Settings</h1>
+                            <h1 class="page-title">My Business</h1>
                             <p class="page-subtitle">Configure your company information and branding</p>
                         </div>
                     </div>
@@ -626,9 +649,14 @@
                                 <input type="email" id="contactEmail" placeholder="quotes@company.com">
                             </div>
                             <div class="form-group">
-                                <label>Logo URL <span class="label-hint">(optional)</span></label>
-                                <input type="url" id="logoUrl" placeholder="https://...">
+                                <label>Phone Number</label>
+                                <input type="text" id="businessPhone" placeholder="(555) 123-4567">
                             </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Logo URL <span class="label-hint">(optional)</span></label>
+                            <input type="url" id="logoUrl" placeholder="https://...">
                         </div>
 
                         <div id="logoPreviewContainer" class="logo-preview-container hidden">
@@ -669,7 +697,7 @@
                 <div id="servicesSection" class="hidden">
                     <div class="top-bar">
                         <div>
-                            <h1 class="page-title">Services & Products</h1>
+                            <h1 class="page-title">My Products & Services</h1>
                             <p class="page-subtitle">Manage what you offer to customers</p>
                         </div>
                     </div>
@@ -719,119 +747,85 @@
                     </div>
                 </div>
 
-                <!-- Landing Page Section -->
-                <div id="landingSection" class="hidden">
+                <!-- My Quote Page Section -->
+                <div id="quotepageSection" class="hidden">
                     <div class="top-bar">
                         <div>
-                            <h1 class="page-title">Landing Page</h1>
-                            <p class="page-subtitle">Customize the message that appears above your calculator</p>
+                            <h1 class="page-title">My Quote Page</h1>
+                            <p class="page-subtitle">Customize your calculator and share it with customers</p>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <h3 class="card-title">Welcome Message</h3>
-                                <p class="card-description">This message will appear at the top of your calculator page</p>
+                    <div class="quote-page-grid">
+                        <!-- Left Side - Settings -->
+                        <div class="quote-page-settings">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div>
+                                        <h3 class="card-title">Landing Section</h3>
+                                        <p class="card-description">Customize the message above your calculator</p>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Headline <span class="label-hint">(optional)</span></label>
+                                    <input type="text" id="landingHeadline" placeholder="Get Your Custom Quote Today">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Welcome Message <span class="label-hint">(optional)</span></label>
+                                    <textarea id="landingMessage" rows="4" placeholder="Tell customers about your services..."></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Text Color</label>
+                                    <div class="color-picker-group">
+                                        <input type="color" id="landingTextColor" value="#1f2937">
+                                        <input type="text" id="landingTextColorHex" value="#1f2937" readonly>
+                                    </div>
+                                </div>
+
+                                <button class="btn btn-success" onclick="saveQuotePage()">Save Changes</button>
                             </div>
-                        </div>
 
-                        <div class="form-group">
-                            <label>Headline <span class="label-hint">(optional)</span></label>
-                            <input type="text" id="landingHeadline" placeholder="Get Your Custom Quote Today">
-                        </div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div>
+                                        <h3 class="card-title">Share Your Calculator</h3>
+                                        <p class="card-description">Direct link or embed on your website</p>
+                                    </div>
+                                </div>
 
-                        <div class="form-group">
-                            <label>Welcome Message <span class="label-hint">(optional)</span></label>
-                            <textarea id="landingMessage" rows="5" placeholder="Tell customers about your services and what to expect from the quote process..."></textarea>
-                        </div>
+                                <div class="form-group">
+                                    <label>Calculator URL</label>
+                                    <div class="url-display" id="calculatorUrl" style="margin-bottom: 10px;">Loading...</div>
+                                    <div class="url-actions">
+                                        <button class="btn btn-primary btn-sm" onclick="copyUrl()">Copy Link</button>
+                                        <button class="btn btn-secondary btn-sm" onclick="openCalculator()">Open in New Tab</button>
+                                    </div>
+                                </div>
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Phone Number <span class="label-hint">(optional)</span></label>
-                                <input type="text" id="landingPhone" placeholder="(555) 123-4567">
-                            </div>
-                            <div class="form-group">
-                                <label>Text Color</label>
-                                <div class="color-picker-group">
-                                    <input type="color" id="landingTextColor" value="#1f2937">
-                                    <input type="text" id="landingTextColorHex" value="#1f2937" readonly>
+                                <div class="form-group">
+                                    <label>Embed Code</label>
+                                    <div class="url-display" id="embedCode" style="font-size: 11px; line-height: 1.6; margin-bottom: 10px;">Loading...</div>
+                                    <button class="btn btn-primary btn-sm" onclick="copyEmbedCode()">Copy Embed Code</button>
                                 </div>
                             </div>
                         </div>
 
-                        <button class="btn btn-success" onclick="saveLandingPage()">Save Landing Page</button>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <h3 class="card-title">Preview</h3>
-                                <p class="card-description">This is how your landing section will appear</p>
+                        <!-- Right Side - Preview -->
+                        <div class="quote-page-preview">
+                            <div class="card" style="height: 100%;">
+                                <div class="card-header">
+                                    <div>
+                                        <h3 class="card-title">Live Preview</h3>
+                                        <p class="card-description">See how your calculator looks to customers</p>
+                                    </div>
+                                </div>
+                                <div class="calculator-preview">
+                                    <iframe id="calculatorIframe" frameborder="0"></iframe>
+                                </div>
                             </div>
-                        </div>
-                        <div id="landingPreview" class="landing-preview">
-                            <div class="preview-headline">Get Your Custom Quote Today</div>
-                            <div class="preview-message">Your welcome message will appear here...</div>
-                            <div class="preview-contact">
-                                <span>📧 contact@business.com</span>
-                                <span>📞 (555) 123-4567</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Calculator Link Section -->
-                <div id="calculatorSection" class="hidden">
-                    <div class="top-bar">
-                        <div>
-                            <h1 class="page-title">Calculator Link</h1>
-                            <p class="page-subtitle">Share this link with your customers or embed on your website</p>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <h3 class="card-title">Calculator URL</h3>
-                                <p class="card-description">Direct link to share with customers</p>
-                            </div>
-                        </div>
-                        <div class="calculator-url-box">
-                            <div class="url-label">Your unique calculator URL:</div>
-                            <div class="url-display" id="calculatorUrl">Loading...</div>
-                            <div class="url-actions">
-                                <button class="btn btn-primary" onclick="copyUrl()">Copy Link</button>
-                                <button class="btn btn-secondary" onclick="openCalculator()">Open in New Tab</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <h3 class="card-title">Embed Code</h3>
-                                <p class="card-description">Copy and paste this code into your website</p>
-                            </div>
-                        </div>
-                        <div class="calculator-url-box">
-                            <div class="url-label">HTML Embed Code:</div>
-                            <div class="url-display" id="embedCode" style="font-size: 12px; line-height: 1.6;">Loading...</div>
-                            <div class="url-actions">
-                                <button class="btn btn-primary" onclick="copyEmbedCode()">Copy Embed Code</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <h3 class="card-title">Calculator Preview</h3>
-                                <p class="card-description">This is how your calculator will look to customers</p>
-                            </div>
-                        </div>
-                        <div class="calculator-preview">
-                            <iframe id="calculatorIframe" frameborder="0"></iframe>
                         </div>
                     </div>
                 </div>
@@ -910,8 +904,7 @@
             // Hide all sections
             document.getElementById('settingsSection').classList.add('hidden');
             document.getElementById('servicesSection').classList.add('hidden');
-            document.getElementById('landingSection').classList.add('hidden');
-            document.getElementById('calculatorSection').classList.add('hidden');
+            document.getElementById('quotepageSection').classList.add('hidden');
 
             // Remove active from all nav items
             document.querySelectorAll('.nav-item').forEach(item => {
@@ -925,54 +918,29 @@
             } else if (section === 'services') {
                 document.getElementById('servicesSection').classList.remove('hidden');
                 document.querySelectorAll('.nav-item')[1].classList.add('active');
-            } else if (section === 'landing') {
-                document.getElementById('landingSection').classList.remove('hidden');
+            } else if (section === 'quotepage') {
+                document.getElementById('quotepageSection').classList.remove('hidden');
                 document.querySelectorAll('.nav-item')[2].classList.add('active');
-            } else if (section === 'calculator') {
-                document.getElementById('calculatorSection').classList.remove('hidden');
-                document.querySelectorAll('.nav-item')[3].classList.add('active');
             }
         }
 
-        // Landing Page
-        async function saveLandingPage() {
+        // Quote Page (combines landing + calculator)
+        async function saveQuotePage() {
             if (!currentUser) return;
 
-            const landingData = {
+            const quotePageData = {
                 landingHeadline: document.getElementById('landingHeadline').value,
                 landingMessage: document.getElementById('landingMessage').value,
-                landingPhone: document.getElementById('landingPhone').value,
                 landingTextColor: document.getElementById('landingTextColor').value,
                 updatedAt: new Date().toISOString()
             };
 
             try {
-                await setDoc(doc(db, 'businesses', currentUser.uid), landingData, { merge: true });
-                alert('✓ Landing page saved successfully!');
-                updateLandingPreview();
+                await setDoc(doc(db, 'businesses', currentUser.uid), quotePageData, { merge: true });
+                alert('✓ Quote page saved successfully!');
             } catch (error) {
                 alert('Error saving: ' + error.message);
             }
-        }
-
-        function updateLandingPreview() {
-            const headline = document.getElementById('landingHeadline').value || 'Get Your Custom Quote Today';
-            const message = document.getElementById('landingMessage').value || 'Your welcome message will appear here...';
-            const phone = document.getElementById('landingPhone').value || '(555) 123-4567';
-            const email = document.getElementById('contactEmail').value || 'contact@business.com';
-            const textColor = document.getElementById('landingTextColor').value || '#1f2937';
-
-            const previewElements = document.querySelectorAll('.preview-headline, .preview-message, .preview-contact, .preview-contact span');
-            previewElements.forEach(el => {
-                el.style.color = textColor;
-            });
-
-            document.querySelector('.preview-headline').textContent = headline;
-            document.querySelector('.preview-message').textContent = message;
-            document.querySelector('.preview-contact').innerHTML = `
-                <span>📧 ${email}</span>
-                <span>📞 ${phone}</span>
-            `;
         }
 
         // Business Settings
@@ -983,6 +951,7 @@
                 businessName: document.getElementById('businessName').value,
                 logoUrl: document.getElementById('logoUrl').value,
                 contactEmail: document.getElementById('contactEmail').value,
+                businessPhone: document.getElementById('businessPhone').value,
                 primaryColor: document.getElementById('primaryColor').value,
                 secondaryColor: document.getElementById('secondaryColor').value,
                 updatedAt: new Date().toISOString()
@@ -1100,6 +1069,7 @@
                     document.getElementById('businessName').value = data.businessName || '';
                     document.getElementById('logoUrl').value = data.logoUrl || '';
                     document.getElementById('contactEmail').value = data.contactEmail || '';
+                    document.getElementById('businessPhone').value = data.businessPhone || '';
                     document.getElementById('primaryColor').value = data.primaryColor || '#667eea';
                     document.getElementById('secondaryColor').value = data.secondaryColor || '#764ba2';
                     document.getElementById('primaryColorHex').value = data.primaryColor || '#667eea';
@@ -1108,7 +1078,6 @@
                     // Load landing page data
                     document.getElementById('landingHeadline').value = data.landingHeadline || '';
                     document.getElementById('landingMessage').value = data.landingMessage || '';
-                    document.getElementById('landingPhone').value = data.landingPhone || '';
                     document.getElementById('landingTextColor').value = data.landingTextColor || '#1f2937';
                     document.getElementById('landingTextColorHex').value = data.landingTextColor || '#1f2937';
                     
@@ -1119,8 +1088,6 @@
                         document.getElementById('logoPreview').src = data.logoUrl;
                         document.getElementById('logoPreviewContainer').classList.remove('hidden');
                     }
-                    
-                    updateLandingPreview();
                 }
                 await loadServices();
                 updateCalculatorUrl();
@@ -1171,8 +1138,7 @@
         window.copyUrl = copyUrl;
         window.copyEmbedCode = copyEmbedCode;
         window.openCalculator = openCalculator;
-        window.saveLandingPage = saveLandingPage;
-        window.updateLandingPreview = updateLandingPreview;
+        window.saveQuotePage = saveQuotePage;
 
         // Color preview updates
         document.getElementById('primaryColor')?.addEventListener('input', (e) => {
@@ -1194,14 +1160,9 @@
             }
         });
 
-        // Landing page live preview updates
-        document.getElementById('landingHeadline')?.addEventListener('input', updateLandingPreview);
-        document.getElementById('landingMessage')?.addEventListener('input', updateLandingPreview);
-        document.getElementById('landingPhone')?.addEventListener('input', updateLandingPreview);
-        document.getElementById('contactEmail')?.addEventListener('input', updateLandingPreview);
+        // Landing text color preview
         document.getElementById('landingTextColor')?.addEventListener('input', (e) => {
             document.getElementById('landingTextColorHex').value = e.target.value;
-            updateLandingPreview();
         });
     </script>
 </body>
