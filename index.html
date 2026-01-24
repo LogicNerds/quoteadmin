@@ -374,18 +374,6 @@
             }
         });
 
-        // Make functions globally available
-        window.signup = signup;
-        window.login = login;
-        window.logout = logout;
-        window.saveBusinessSettings = saveBusinessSettings;
-        window.addService = addService;
-        window.deleteService = deleteService;
-        window.loadBusinessData = loadBusinessData;
-        window.copyUrl = copyUrl;
-    </script>
-
-    <script>
         // Auth Functions
         async function signup() {
             const email = document.getElementById('authEmail').value;
@@ -532,6 +520,16 @@
             navigator.clipboard.writeText(url);
             alert('URL copied to clipboard!');
         }
+
+        // Make functions globally available
+        window.signup = signup;
+        window.login = login;
+        window.logout = logout;
+        window.saveBusinessSettings = saveBusinessSettings;
+        window.addService = addService;
+        window.deleteService = deleteService;
+        window.loadBusinessData = loadBusinessData;
+        window.copyUrl = copyUrl;
 
         // Color preview updates
         document.getElementById('primaryColor')?.addEventListener('input', (e) => {
