@@ -440,6 +440,43 @@
             border: none;
         }
 
+        /* Landing Page Preview */
+        .landing-preview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 48px 32px;
+            border-radius: 8px;
+            color: white;
+            text-align: center;
+        }
+
+        .preview-headline {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .preview-message {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            opacity: 0.95;
+        }
+
+        .preview-contact {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            flex-wrap: wrap;
+            font-size: 14px;
+        }
+
+        .preview-contact span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         /* Stats Cards */
         .stats-grid {
             display: grid;
@@ -541,6 +578,10 @@
                     <div class="nav-item" onclick="showSection('services')">
                         <span class="nav-icon">◆</span>
                         Services
+                    </div>
+                    <div class="nav-item" onclick="showSection('landing')">
+                        <span class="nav-icon">▣</span>
+                        Landing Page
                     </div>
                     <div class="nav-item" onclick="showSection('calculator')">
                         <span class="nav-icon">◉</span>
@@ -676,6 +717,59 @@
                     </div>
                 </div>
 
+                <!-- Landing Page Section -->
+                <div id="landingSection" class="hidden">
+                    <div class="top-bar">
+                        <div>
+                            <h1 class="page-title">Landing Page</h1>
+                            <p class="page-subtitle">Customize the message that appears above your calculator</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Welcome Message</h3>
+                                <p class="card-description">This message will appear at the top of your calculator page</p>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Headline <span class="label-hint">(optional)</span></label>
+                            <input type="text" id="landingHeadline" placeholder="Get Your Custom Quote Today">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Welcome Message <span class="label-hint">(optional)</span></label>
+                            <textarea id="landingMessage" rows="5" placeholder="Tell customers about your services and what to expect from the quote process..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Phone Number <span class="label-hint">(optional)</span></label>
+                            <input type="text" id="landingPhone" placeholder="(555) 123-4567">
+                        </div>
+
+                        <button class="btn btn-success" onclick="saveLandingPage()">Save Landing Page</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Preview</h3>
+                                <p class="card-description">This is how your landing section will appear</p>
+                            </div>
+                        </div>
+                        <div id="landingPreview" class="landing-preview">
+                            <div class="preview-headline">Get Your Custom Quote Today</div>
+                            <div class="preview-message">Your welcome message will appear here...</div>
+                            <div class="preview-contact">
+                                <span>📧 contact@business.com</span>
+                                <span>📞 (555) 123-4567</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Calculator Link Section -->
                 <div id="calculatorSection" class="hidden">
                     <div class="top-bar">
@@ -805,6 +899,7 @@
             // Hide all sections
             document.getElementById('settingsSection').classList.add('hidden');
             document.getElementById('servicesSection').classList.add('hidden');
+            document.getElementById('landingSection').classList.add('hidden');
             document.getElementById('calculatorSection').classList.add('hidden');
 
             // Remove active from all nav items
@@ -819,10 +914,47 @@
             } else if (section === 'services') {
                 document.getElementById('servicesSection').classList.remove('hidden');
                 document.querySelectorAll('.nav-item')[1].classList.add('active');
+            } else if (section === 'landing') {
+                document.getElementById('landingSection').classList.remove('hidden');
+                document.querySelectorAll('.nav-item')[2].classList.add('active');
             } else if (section === 'calculator') {
                 document.getElementById('calculatorSection').classList.remove('hidden');
-                document.querySelectorAll('.nav-item')[2].classList.add('active');
+                document.querySelectorAll('.nav-item')[3].classList.add('active');
             }
+        }
+
+        // Landing Page
+        async function saveLandingPage() {
+            if (!currentUser) return;
+
+            const landingData = {
+                landingHeadline: document.getElementById('landingHeadline').value,
+                landingMessage: document.getElementById('landingMessage').value,
+                landingPhone: document.getElementById('landingPhone').value,
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                await setDoc(doc(db, 'businesses', currentUser.uid), landingData, { merge: true });
+                alert('✓ Landing page saved successfully!');
+                updateLandingPreview();
+            } catch (error) {
+                alert('Error saving: ' + error.message);
+            }
+        }
+
+        function updateLandingPreview() {
+            const headline = document.getElementById('landingHeadline').value || 'Get Your Custom Quote Today';
+            const message = document.getElementById('landingMessage').value || 'Your welcome message will appear here...';
+            const phone = document.getElementById('landingPhone').value || '(555) 123-4567';
+            const email = document.getElementById('contactEmail').value || 'contact@business.com';
+
+            document.querySelector('.preview-headline').textContent = headline;
+            document.querySelector('.preview-message').textContent = message;
+            document.querySelector('.preview-contact').innerHTML = `
+                <span>📧 ${email}</span>
+                <span>📞 ${phone}</span>
+            `;
         }
 
         // Business Settings
@@ -955,6 +1087,11 @@
                     document.getElementById('primaryColorHex').value = data.primaryColor || '#667eea';
                     document.getElementById('secondaryColorHex').value = data.secondaryColor || '#764ba2';
                     
+                    // Load landing page data
+                    document.getElementById('landingHeadline').value = data.landingHeadline || '';
+                    document.getElementById('landingMessage').value = data.landingMessage || '';
+                    document.getElementById('landingPhone').value = data.landingPhone || '';
+                    
                     // Update sidebar
                     document.getElementById('sidebarBusinessName').textContent = data.businessName || 'Your Business';
                     
@@ -962,6 +1099,8 @@
                         document.getElementById('logoPreview').src = data.logoUrl;
                         document.getElementById('logoPreviewContainer').classList.remove('hidden');
                     }
+                    
+                    updateLandingPreview();
                 }
                 await loadServices();
                 updateCalculatorUrl();
@@ -1012,6 +1151,8 @@
         window.copyUrl = copyUrl;
         window.copyEmbedCode = copyEmbedCode;
         window.openCalculator = openCalculator;
+        window.saveLandingPage = saveLandingPage;
+        window.updateLandingPreview = updateLandingPreview;
 
         // Color preview updates
         document.getElementById('primaryColor')?.addEventListener('input', (e) => {
@@ -1032,6 +1173,12 @@
                 container.classList.add('hidden');
             }
         });
+
+        // Landing page live preview updates
+        document.getElementById('landingHeadline')?.addEventListener('input', updateLandingPreview);
+        document.getElementById('landingMessage')?.addEventListener('input', updateLandingPreview);
+        document.getElementById('landingPhone')?.addEventListener('input', updateLandingPreview);
+        document.getElementById('contactEmail')?.addEventListener('input', updateLandingPreview);
     </script>
 </body>
 </html>
