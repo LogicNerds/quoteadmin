@@ -510,8 +510,7 @@
 
         function updateCalculatorUrl() {
             if (!currentUser) return;
-            const baseUrl = window.location.origin;
-            const calculatorUrl = `${baseUrl}/quote-nerd-calculator.html?id=${currentUser.uid}`;
+            const calculatorUrl = `https://logicnerds.github.io/quoteui/?id=${currentUser.uid}`;
             document.getElementById('calculatorUrl').textContent = calculatorUrl;
         }
 
