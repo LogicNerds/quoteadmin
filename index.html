@@ -442,10 +442,10 @@
 
         /* Landing Page Preview */
         .landing-preview {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-main);
             padding: 48px 32px;
             border-radius: 8px;
-            color: white;
+            border: 1px solid var(--border);
             text-align: center;
         }
 
@@ -454,13 +454,14 @@
             font-weight: 700;
             margin-bottom: 16px;
             line-height: 1.2;
+            color: #1f2937;
         }
 
         .preview-message {
             font-size: 16px;
             line-height: 1.6;
             margin-bottom: 32px;
-            opacity: 0.95;
+            color: #1f2937;
         }
 
         .preview-contact {
@@ -469,6 +470,7 @@
             gap: 32px;
             flex-wrap: wrap;
             font-size: 14px;
+            color: #1f2937;
         }
 
         .preview-contact span {
@@ -744,9 +746,18 @@
                             <textarea id="landingMessage" rows="5" placeholder="Tell customers about your services and what to expect from the quote process..."></textarea>
                         </div>
 
-                        <div class="form-group">
-                            <label>Phone Number <span class="label-hint">(optional)</span></label>
-                            <input type="text" id="landingPhone" placeholder="(555) 123-4567">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Phone Number <span class="label-hint">(optional)</span></label>
+                                <input type="text" id="landingPhone" placeholder="(555) 123-4567">
+                            </div>
+                            <div class="form-group">
+                                <label>Text Color</label>
+                                <div class="color-picker-group">
+                                    <input type="color" id="landingTextColor" value="#1f2937">
+                                    <input type="text" id="landingTextColorHex" value="#1f2937" readonly>
+                                </div>
+                            </div>
                         </div>
 
                         <button class="btn btn-success" onclick="saveLandingPage()">Save Landing Page</button>
@@ -931,6 +942,7 @@
                 landingHeadline: document.getElementById('landingHeadline').value,
                 landingMessage: document.getElementById('landingMessage').value,
                 landingPhone: document.getElementById('landingPhone').value,
+                landingTextColor: document.getElementById('landingTextColor').value,
                 updatedAt: new Date().toISOString()
             };
 
@@ -948,6 +960,12 @@
             const message = document.getElementById('landingMessage').value || 'Your welcome message will appear here...';
             const phone = document.getElementById('landingPhone').value || '(555) 123-4567';
             const email = document.getElementById('contactEmail').value || 'contact@business.com';
+            const textColor = document.getElementById('landingTextColor').value || '#1f2937';
+
+            const previewElements = document.querySelectorAll('.preview-headline, .preview-message, .preview-contact, .preview-contact span');
+            previewElements.forEach(el => {
+                el.style.color = textColor;
+            });
 
             document.querySelector('.preview-headline').textContent = headline;
             document.querySelector('.preview-message').textContent = message;
@@ -1091,6 +1109,8 @@
                     document.getElementById('landingHeadline').value = data.landingHeadline || '';
                     document.getElementById('landingMessage').value = data.landingMessage || '';
                     document.getElementById('landingPhone').value = data.landingPhone || '';
+                    document.getElementById('landingTextColor').value = data.landingTextColor || '#1f2937';
+                    document.getElementById('landingTextColorHex').value = data.landingTextColor || '#1f2937';
                     
                     // Update sidebar
                     document.getElementById('sidebarBusinessName').textContent = data.businessName || 'Your Business';
@@ -1179,6 +1199,10 @@
         document.getElementById('landingMessage')?.addEventListener('input', updateLandingPreview);
         document.getElementById('landingPhone')?.addEventListener('input', updateLandingPreview);
         document.getElementById('contactEmail')?.addEventListener('input', updateLandingPreview);
+        document.getElementById('landingTextColor')?.addEventListener('input', (e) => {
+            document.getElementById('landingTextColorHex').value = e.target.value;
+            updateLandingPreview();
+        });
     </script>
 </body>
 </html>
