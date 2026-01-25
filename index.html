@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quick Quote Page - Admin Panel</title>
+    <title>My Quick Quote - Admin Panel</title>
+    <!-- jsPDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -70,6 +73,8 @@
             position: fixed;
             height: 100vh;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         .sidebar-header {
@@ -902,7 +907,7 @@
 <body>
     <!-- Auth Section -->
     <div id="authSection" class="auth-container">
-        <h2>Quick Quote Page Admin</h2>
+        <h2>My Quick Quote Admin</h2>
         <p class="subtitle">Sign in to manage your quote calculator</p>
         <div class="form-group">
             <label>Email Address</label>
@@ -922,7 +927,7 @@
             <!-- Sidebar -->
             <aside class="sidebar">
                 <div class="sidebar-header">
-                    <h1>Quick Quote Page</h1>
+                    <h1>My Quick Quote</h1>
                     <div class="business-name" id="sidebarBusinessName">Loading...</div>
                 </div>
                 <nav class="sidebar-nav">
@@ -934,19 +939,20 @@
                         <span class="nav-icon">◆</span>
                         My Products & Services
                     </div>
-                    <div class="nav-item" onclick="showSection('quotes')">
-                        <span class="nav-icon">📋</span>
-                        Quotes <span id="quotesBadge" class="nav-badge hidden">0</span>
-                    </div>
                     <div class="nav-item" onclick="showSection('quotepage')">
                         <span class="nav-icon">◉</span>
                         My Quote Page
                     </div>
-                    <div class="nav-item" onclick="logout()" style="margin-top: 16px; color: var(--danger);">
-                        <span class="nav-icon">→</span>
-                        Logout
+                    <div class="nav-item" onclick="showSection('quotes')">
+                        <span class="nav-icon">📋</span>
+                        My Quotes <span id="quotesBadge" class="nav-badge hidden">0</span>
                     </div>
                 </nav>
+                <div style="flex: 1;"></div>
+                <div class="nav-item" onclick="logout()" style="margin: 0 0 24px 0; color: var(--danger);">
+                    <span class="nav-icon">→</span>
+                    Logout
+                </div>
             </aside>
 
             <!-- Main Content -->
@@ -1297,13 +1303,13 @@
             } else if (section === 'services') {
                 document.getElementById('servicesSection').classList.remove('hidden');
                 document.querySelectorAll('.nav-item')[1].classList.add('active');
-            } else if (section === 'quotes') {
-                document.getElementById('quotesSection').classList.remove('hidden');
-                document.querySelectorAll('.nav-item')[2].classList.add('active');
-                loadQuotes();
             } else if (section === 'quotepage') {
                 document.getElementById('quotepageSection').classList.remove('hidden');
+                document.querySelectorAll('.nav-item')[2].classList.add('active');
+            } else if (section === 'quotes') {
+                document.getElementById('quotesSection').classList.remove('hidden');
                 document.querySelectorAll('.nav-item')[3].classList.add('active');
+                loadQuotes();
             }
         }
 
@@ -1450,19 +1456,60 @@
                 description: description,
                 basePrice: parseFloat(price),
                 priceType: document.getElementById('priceType').value,
-                active: true,
-                createdAt: new Date().toISOString()
+                active: true
             };
 
             try {
-                await addDoc(collection(db, 'services'), serviceData);
+                if (editingServiceId) {
+                    // Update existing service
+                    await setDoc(doc(db, 'services', editingServiceId), serviceData, { merge: true });
+                    editingServiceId = null;
+                    document.querySelector('#servicesSection .btn-primary').textContent = 'Add';
+                } else {
+                    // Add new service
+                    serviceData.createdAt = new Date().toISOString();
+                    await addDoc(collection(db, 'services'), serviceData);
+                }
+                
+                // Clear form
                 document.getElementById('serviceName').value = '';
                 document.getElementById('serviceDescription').value = '';
                 document.getElementById('servicePrice').value = '';
                 document.getElementById('priceType').value = 'fixed';
                 await loadServices();
             } catch (error) {
-                alert('Error adding service: ' + error.message);
+                alert('Error saving service: ' + error.message);
+            }
+        }
+
+        async function editService(serviceId) {
+            try {
+                const serviceDoc = await getDoc(doc(db, 'services', serviceId));
+                if (!serviceDoc.exists()) {
+                    alert('Service not found');
+                    return;
+                }
+
+                const service = serviceDoc.data();
+                
+                // Populate form
+                document.getElementById('serviceName').value = service.name;
+                document.getElementById('serviceDescription').value = service.description || '';
+                document.getElementById('servicePrice').value = service.basePrice;
+                document.getElementById('priceType').value = service.priceType;
+
+                // Track that we're editing
+                editingServiceId = serviceId;
+                
+                // Change button text
+                document.querySelector('#servicesSection .btn-primary').textContent = 'Update';
+
+                // Scroll to form
+                document.getElementById('serviceName').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                document.getElementById('serviceName').focus();
+
+            } catch (error) {
+                alert('Error loading service: ' + error.message);
             }
         }
 
@@ -1541,7 +1588,8 @@
                         <div class="service-price">$${service.basePrice}</div>
                         <div class="service-type">${priceTypeLabels[service.priceType]}</div>
                         <div class="service-desc">${service.description || ''}</div>
-                        <div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary btn-sm" onclick="editService('${doc.id}')">Edit</button>
                             <button class="btn btn-danger btn-sm" onclick="deleteService('${doc.id}')">Delete</button>
                         </div>
                     </div>
@@ -1622,6 +1670,7 @@
         // Quotes Management
         let currentQuoteId = null;
         let currentQuoteStatus = null;
+        let editingServiceId = null;
 
         async function loadQuotes() {
             if (!currentUser) return;
@@ -1713,20 +1762,24 @@
         }
 
         async function viewQuote(quoteId, status) {
+            console.log('viewQuote called:', quoteId, status);
             try {
-                const quoteDoc = await getDoc(doc(db, 'quotes', quoteId));
-                if (!quoteDoc.exists()) return;
+                const quoteDoc = await getDoc(doc(window.db, 'quotes', quoteId));
+                if (!quoteDoc.exists()) {
+                    console.error('Quote not found:', quoteId);
+                    return;
+                }
 
                 const quote = quoteDoc.data();
+                console.log('Quote data:', quote);
                 currentQuoteId = quoteId;
                 currentQuoteStatus = status;
 
-                // Mark as viewed
-                if (!quote.viewedAt) {
-                    await setDoc(doc(db, 'quotes', quoteId), {
-                        viewedAt: new Date().toISOString()
-                    }, { merge: true });
-                }
+                // Mark as viewed and update lastTouched
+                await setDoc(doc(window.db, 'quotes', quoteId), {
+                    viewedAt: quote.viewedAt || new Date().toISOString(),
+                    lastTouched: new Date().toISOString()
+                }, { merge: true });
 
                 // Build modal content
                 document.getElementById('modalQuoteNumber').textContent = quote.quoteNumber;
@@ -1741,7 +1794,12 @@
                         ${quote.customerEmail ? `
                         <div class="modal-info-grid">
                             <div class="modal-info-label">Email:</div>
-                            <div>${quote.customerEmail}</div>
+                            <div>
+                                ${quote.customerEmail}
+                                <button class="btn btn-primary btn-sm" style="margin-left: 12px;" onclick="emailCustomer('${quote.customerEmail}', '${quote.quoteNumber}')">
+                                    ✉ Email Customer
+                                </button>
+                            </div>
                         </div>
                         ` : ''}
                         ${quote.customerPhone ? `
@@ -1752,13 +1810,41 @@
                         ` : ''}
                         ${quote.notes ? `
                         <div class="modal-info-grid">
-                            <div class="modal-info-label">Notes:</div>
+                            <div class="modal-info-label">Customer Notes:</div>
                             <div>${quote.notes}</div>
                         </div>
                         ` : ''}
                         <div class="modal-info-grid">
                             <div class="modal-info-label">Submitted:</div>
                             <div>${new Date(quote.createdAt).toLocaleString()}</div>
+                        </div>
+                        ${quote.lastTouched ? `
+                        <div class="modal-info-grid">
+                            <div class="modal-info-label">Last Touched:</div>
+                            <div>${new Date(quote.lastTouched).toLocaleString()}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="modal-section">
+                        <h3>Internal Notes & Status</h3>
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label>Status</label>
+                            <select id="quoteStatus" onchange="updateQuoteStatus('${quoteId}', this.value)" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;">
+                                <option value="New" ${(quote.quoteStatus || 'New') === 'New' ? 'selected' : ''}>New</option>
+                                <option value="Follow Up" ${quote.quoteStatus === 'Follow Up' ? 'selected' : ''}>Follow Up</option>
+                                <option value="Signed" ${quote.quoteStatus === 'Signed' ? 'selected' : ''}>Signed</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Internal Notes</label>
+                            <textarea 
+                                id="quoteInternalNotes" 
+                                rows="4" 
+                                placeholder="Add notes about this quote..."
+                                onblur="updateQuoteNotes('${quoteId}', this.value)"
+                                style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; font-family: inherit; resize: vertical;"
+                            >${quote.internalNotes || ''}</textarea>
                         </div>
                     </div>
 
@@ -1798,6 +1884,7 @@
                 }
 
                 // Show modal
+                console.log('Showing modal');
                 document.getElementById('quoteModal').classList.remove('hidden');
 
                 // Reload quotes to update "new" status
@@ -1805,7 +1892,7 @@
 
             } catch (error) {
                 console.error('Error viewing quote:', error);
-                alert('Error loading quote details');
+                alert('Error loading quote details: ' + error.message);
             }
         }
 
@@ -1864,9 +1951,137 @@
         }
 
         async function downloadQuotePDF() {
-            // This will use the same PDF generation as the calculator
-            // For now, just close the modal
-            alert('PDF download feature coming soon!');
+            if (!currentQuoteId) return;
+
+            try {
+                const quoteDoc = await getDoc(doc(window.db, 'quotes', currentQuoteId));
+                if (!quoteDoc.exists()) {
+                    alert('Quote not found');
+                    return;
+                }
+
+                const quote = quoteDoc.data();
+                const businessDoc = await getDoc(doc(window.db, 'businesses', quote.businessId));
+                const business = businessDoc.exists() ? businessDoc.data() : {};
+
+                // Import jsPDF and autoTable
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Add logo if available
+                if (business.logoUrl) {
+                    try {
+                        doc.addImage(business.logoUrl, 'PNG', 15, 15, 30, 30);
+                    } catch (e) {
+                        console.log('Could not add logo to PDF');
+                    }
+                }
+
+                // Title
+                doc.setFontSize(20);
+                doc.setTextColor(37, 99, 235);
+                doc.text(business.businessName || 'Quote', business.logoUrl ? 50 : 15, 25);
+
+                // Quote number
+                doc.setFontSize(12);
+                doc.setTextColor(100, 100, 100);
+                doc.text(quote.quoteNumber, business.logoUrl ? 50 : 15, 35);
+
+                // Customer info
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Customer Information', 15, 55);
+                
+                doc.setFontSize(10);
+                doc.setTextColor(60, 60, 60);
+                let yPos = 65;
+                doc.text(`Name: ${quote.customerName}`, 15, yPos);
+                if (quote.customerEmail) {
+                    yPos += 7;
+                    doc.text(`Email: ${quote.customerEmail}`, 15, yPos);
+                }
+                if (quote.customerPhone) {
+                    yPos += 7;
+                    doc.text(`Phone: ${quote.customerPhone}`, 15, yPos);
+                }
+
+                // Services table
+                yPos += 15;
+                const tableData = quote.services.map(service => {
+                    const lineTotal = service.priceType === 'perUnit' 
+                        ? service.basePrice * service.quantity 
+                        : service.basePrice;
+                    return [
+                        service.serviceName,
+                        service.quantity.toString(),
+                        `$${lineTotal.toFixed(2)}`
+                    ];
+                });
+
+                doc.autoTable({
+                    startY: yPos,
+                    head: [['Service', 'Quantity', 'Price']],
+                    body: tableData,
+                    foot: [['', 'Total Estimate:', `$${quote.totalEstimate.toFixed(2)}`]],
+                    theme: 'grid',
+                    headStyles: { fillColor: [37, 99, 235] },
+                    footStyles: { fillColor: [240, 244, 255], textColor: [0, 0, 0], fontStyle: 'bold' }
+                });
+
+                // Business contact info
+                yPos = doc.lastAutoTable.finalY + 15;
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text('Contact Us', 15, yPos);
+                
+                doc.setFontSize(10);
+                doc.setTextColor(60, 60, 60);
+                if (business.email) {
+                    yPos += 7;
+                    doc.text(`Email: ${business.email}`, 15, yPos);
+                }
+                if (business.phone) {
+                    yPos += 7;
+                    doc.text(`Phone: ${business.phone}`, 15, yPos);
+                }
+
+                // Download
+                doc.save(`${quote.quoteNumber}.pdf`);
+
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF: ' + error.message);
+            }
+        }
+
+        async function updateQuoteNotes(quoteId, notes) {
+            try {
+                await setDoc(doc(window.db, 'quotes', quoteId), {
+                    internalNotes: notes,
+                    lastTouched: new Date().toISOString()
+                }, { merge: true });
+            } catch (error) {
+                console.error('Error updating notes:', error);
+                alert('Error saving notes');
+            }
+        }
+
+        async function updateQuoteStatus(quoteId, newStatus) {
+            try {
+                await setDoc(doc(window.db, 'quotes', quoteId), {
+                    quoteStatus: newStatus,
+                    lastTouched: new Date().toISOString()
+                }, { merge: true });
+                await loadQuotes(); // Refresh the quotes list
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Error updating status');
+            }
+        }
+
+        function emailCustomer(email, quoteNumber) {
+            const subject = encodeURIComponent(`Re: Your Quote ${quoteNumber}`);
+            window.location.href = `mailto:${email}?subject=${subject}`;
         }
 
         // Make functions globally available
@@ -1877,6 +2092,7 @@
         window.handleLogoUpload = handleLogoUpload;
         window.saveBusinessSettings = saveBusinessSettings;
         window.addService = addService;
+        window.editService = editService;
         window.toggleServiceActive = toggleServiceActive;
         window.deleteService = deleteService;
         window.loadBusinessData = loadBusinessData;
@@ -1891,6 +2107,9 @@
         window.deleteQuote = deleteQuote;
         window.showQuotesTab = showQuotesTab;
         window.downloadQuotePDF = downloadQuotePDF;
+        window.updateQuoteNotes = updateQuoteNotes;
+        window.updateQuoteStatus = updateQuoteStatus;
+        window.emailCustomer = emailCustomer;
 
         // Import storage functions for global use
         window.storageRef = ref;
