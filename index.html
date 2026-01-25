@@ -1089,9 +1089,10 @@
                             <div>
                                 <h3 class="card-title">Add New Product or Service</h3>
                             </div>
+                            <a href="#" onclick="toggleBulkAdd(); return false;" style="color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500;" id="bulkAddToggle">Bulk Add</a>
                         </div>
                         
-                        <div class="service-add-row">
+                        <div id="singleAddRow" class="service-add-row">
                             <input type="text" id="serviceName" placeholder="Product/Service Name" class="service-input">
                             <input type="number" id="servicePrice" placeholder="Price" class="service-input service-input-price">
                             <select id="priceType" class="service-input service-input-type">
@@ -1102,6 +1103,9 @@
                             <input type="text" id="serviceDescription" placeholder="Description" class="service-input service-input-description">
                             <button class="btn btn-primary" onclick="addService()">Add</button>
                         </div>
+                        
+                        <div id="bulkAddContainer" class="hidden"></div>
+                        <button id="bulkAddSaveBtn" class="btn btn-success hidden" onclick="saveBulkServices()" style="margin-top: 16px;">Save All Services</button>
                     </div>
 
                     <div class="card">
@@ -1202,7 +1206,7 @@
                 <div id="setupGuideModal" class="modal hidden">
                     <div class="modal-content" style="max-width: 700px;">
                         <div class="modal-header">
-                            <h2>🚀 Quick Setup Guide</h2>
+                            <h2>Quick Setup Guide</h2>
                             <button class="modal-close" onclick="closeSetupGuide()">×</button>
                         </div>
                         <div class="modal-body" style="line-height: 1.8;">
@@ -1213,35 +1217,35 @@
                             <div style="margin-bottom: 24px;">
                                 <h3 style="color: var(--primary); margin-bottom: 8px;">Step 1: Add Your Business Info</h3>
                                 <p style="margin-bottom: 8px;">Fill in your company name, contact email, and phone number on this page.</p>
-                                <p style="color: var(--text-secondary); font-size: 14px;">💡 Tip: Upload a logo to make your calculator look more professional!</p>
+                                <p style="color: var(--text-secondary); font-size: 14px;">Tip: Upload a logo to make your calculator look more professional!</p>
                             </div>
 
                             <div style="margin-bottom: 24px;">
                                 <h3 style="color: var(--primary); margin-bottom: 8px;">Step 2: Add Your Products & Services</h3>
                                 <p style="margin-bottom: 8px;">Go to "My Products & Services" and add the items you want to quote.</p>
-                                <p style="color: var(--text-secondary); font-size: 14px;">💡 Tip: Choose "Fixed" for flat rates, "Per Unit" for quantity-based pricing, or "Custom" for jobs that vary.</p>
+                                <p style="color: var(--text-secondary); font-size: 14px;">Tip: Choose "Fixed" for flat rates, "Per Unit" for quantity-based pricing, or "Custom" for jobs that vary.</p>
                             </div>
 
                             <div style="margin-bottom: 24px;">
                                 <h3 style="color: var(--primary); margin-bottom: 8px;">Step 3: Customize Your Quote Page</h3>
                                 <p style="margin-bottom: 8px;">Visit "My Quote Page" to customize the welcome message and colors.</p>
-                                <p style="color: var(--text-secondary); font-size: 14px;">💡 Tip: Use the preview pane to see changes in real-time!</p>
+                                <p style="color: var(--text-secondary); font-size: 14px;">Tip: Use the preview pane to see changes in real-time!</p>
                             </div>
 
                             <div style="margin-bottom: 24px;">
                                 <h3 style="color: var(--primary); margin-bottom: 8px;">Step 4: Share Your Calculator</h3>
                                 <p style="margin-bottom: 8px;">Copy the calculator link from "My Quote Page" and share it!</p>
-                                <p style="color: var(--text-secondary); font-size: 14px;">💡 Tip: Add it to your website, social media bio, or email signature.</p>
+                                <p style="color: var(--text-secondary); font-size: 14px;">Tip: Add it to your website, social media bio, or email signature.</p>
                             </div>
 
                             <div style="margin-bottom: 24px;">
                                 <h3 style="color: var(--primary); margin-bottom: 8px;">Step 5: Manage Your Quotes</h3>
                                 <p style="margin-bottom: 8px;">Check "My Quotes" to see incoming quote requests and follow up with customers.</p>
-                                <p style="color: var(--text-secondary); font-size: 14px;">💡 Tip: Use the status dropdown to track which quotes need follow-up!</p>
+                                <p style="color: var(--text-secondary); font-size: 14px;">Tip: Use the status dropdown to track which quotes need follow-up!</p>
                             </div>
 
                             <div style="background: #d1fae5; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
-                                <strong>🎉 That's it!</strong> You're ready to start collecting quotes. Questions? Feel free to explore the interface—everything is designed to be intuitive and easy to use.
+                                <strong>That's it!</strong> You're ready to start collecting quotes. Questions? Feel free to explore the interface—everything is designed to be intuitive and easy to use.
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -1952,7 +1956,7 @@
                         <div>${contact}</div>
                         <div>$${quote.totalEstimate.toFixed(2)}</div>
                         <div>${date}</div>
-                        <div>${isNew ? '<span class="quote-status-new">New</span>' : ''}</div>
+                        <div>${isNew ? '<span class="quote-status-new">New</span>' : (quote.quoteStatus || 'New')}</div>
                     </div>
                 `;
             });
@@ -2302,6 +2306,92 @@
             document.getElementById('setupGuideModal').classList.add('hidden');
         }
 
+        function toggleBulkAdd() {
+            const singleRow = document.getElementById('singleAddRow');
+            const bulkContainer = document.getElementById('bulkAddContainer');
+            const bulkBtn = document.getElementById('bulkAddSaveBtn');
+            const toggleLink = document.getElementById('bulkAddToggle');
+
+            if (bulkContainer.classList.contains('hidden')) {
+                // Show bulk add
+                singleRow.classList.add('hidden');
+                bulkContainer.classList.remove('hidden');
+                bulkBtn.classList.remove('hidden');
+                toggleLink.textContent = 'Single Add';
+
+                // Generate 10 rows
+                let html = '';
+                for (let i = 0; i < 10; i++) {
+                    html += `
+                        <div class="service-add-row" style="margin-bottom: 12px;">
+                            <input type="text" class="service-input bulk-name" placeholder="Product/Service Name">
+                            <input type="number" class="service-input service-input-price bulk-price" placeholder="Price">
+                            <select class="service-input service-input-type bulk-type">
+                                <option value="fixed">Fixed</option>
+                                <option value="perUnit">Per Unit</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            <input type="text" class="service-input service-input-description bulk-desc" placeholder="Description">
+                        </div>
+                    `;
+                }
+                bulkContainer.innerHTML = html;
+            } else {
+                // Show single add
+                singleRow.classList.remove('hidden');
+                bulkContainer.classList.add('hidden');
+                bulkBtn.classList.add('hidden');
+                toggleLink.textContent = 'Bulk Add';
+                bulkContainer.innerHTML = '';
+            }
+        }
+
+        async function saveBulkServices() {
+            if (!currentUser) return;
+
+            const rows = document.querySelectorAll('#bulkAddContainer .service-add-row');
+            const services = [];
+
+            rows.forEach(row => {
+                const name = row.querySelector('.bulk-name').value.trim();
+                const price = row.querySelector('.bulk-price').value;
+                const type = row.querySelector('.bulk-type').value;
+                const desc = row.querySelector('.bulk-desc').value.trim();
+
+                if (name && price) {
+                    services.push({
+                        businessId: currentUser.uid,
+                        name: name,
+                        description: desc,
+                        basePrice: parseFloat(price),
+                        priceType: type,
+                        active: true,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+            });
+
+            if (services.length === 0) {
+                alert('Please fill in at least one service with name and price');
+                return;
+            }
+
+            try {
+                // Add all services
+                for (const service of services) {
+                    await addDoc(collection(db, 'services'), service);
+                }
+
+                alert(`✓ Successfully added ${services.length} service(s)!`);
+
+                // Reset bulk add
+                toggleBulkAdd();
+                await loadServices();
+            } catch (error) {
+                alert('Error saving services: ' + error.message);
+            }
+        }
+
         // Make functions globally available
         window.showSection = showSection;
         window.signup = signup;
@@ -2334,6 +2424,8 @@
         window.toggleDisclaimerDrawer = toggleDisclaimerDrawer;
         window.showSetupGuide = showSetupGuide;
         window.closeSetupGuide = closeSetupGuide;
+        window.toggleBulkAdd = toggleBulkAdd;
+        window.saveBulkServices = saveBulkServices;
 
         // Import storage functions for global use
         window.storageRef = ref;
