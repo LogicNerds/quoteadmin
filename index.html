@@ -60,8 +60,17 @@
             font-size: 14px;
         }
         
-        .auth-container .form-group {
+        .auth-container label {
             text-align: left;
+        }
+        
+        .auth-container input::placeholder {
+            text-align: center;
+        }
+        
+        .auth-container .btn {
+            display: block;
+            text-align: center;
         }
         
         .auth-container .auth-helper {
@@ -69,6 +78,14 @@
             font-size: 13px;
             color: var(--text-secondary);
             line-height: 1.5;
+        }
+        
+        .auth-footer {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-secondary);
         }
 
         /* Main Layout */
@@ -233,6 +250,7 @@
 
         input[type="text"],
         input[type="email"],
+        input[type="password"],
         input[type="number"],
         input[type="url"],
         input[type="color"],
@@ -932,6 +950,7 @@
         <button class="btn btn-primary" onclick="login()" style="width: 100%; margin-bottom: 10px;">Sign In</button>
         <div class="auth-helper">To create an account, enter an email address and password and click the button below.</div>
         <button class="btn btn-secondary" onclick="signup()" style="width: 100%;">Create Account</button>
+        <div class="auth-footer">© 2026 Logic Nerds. All rights reserved.</div>
     </div>
 
     <!-- Admin Dashboard -->
