@@ -44,6 +44,7 @@
             padding: 48px;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
         }
 
         .auth-container h2 {
@@ -57,6 +58,17 @@
             color: var(--text-secondary);
             margin-bottom: 32px;
             font-size: 14px;
+        }
+        
+        .auth-container .form-group {
+            text-align: left;
+        }
+        
+        .auth-container .auth-helper {
+            margin: 16px 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
         }
 
         /* Main Layout */
@@ -918,6 +930,7 @@
             <input type="password" id="authPassword" placeholder="Enter your password">
         </div>
         <button class="btn btn-primary" onclick="login()" style="width: 100%; margin-bottom: 10px;">Sign In</button>
+        <div class="auth-helper">To create an account, enter an email address and password and click the button below.</div>
         <button class="btn btn-secondary" onclick="signup()" style="width: 100%;">Create Account</button>
     </div>
 
@@ -972,6 +985,7 @@
                                 <h3 class="card-title">Company Information</h3>
                                 <p class="card-description">This information will be displayed on your quote calculator</p>
                             </div>
+                            <a href="#" onclick="showSetupGuide(); return false;" style="color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500;">📖 Quick Setup Guide</a>
                         </div>
                         
                         <div class="form-group">
@@ -1123,7 +1137,96 @@
                         <div class="modal-footer">
                             <button class="btn btn-secondary" id="modalWatchlistBtn" onclick="moveToWatchlist()">Move to Watchlist</button>
                             <button class="btn btn-danger" onclick="deleteQuote()">Delete</button>
+                            <button class="btn btn-success" onclick="saveQuoteChanges()">Save Changes</button>
                             <button class="btn btn-primary" onclick="downloadQuotePDF()">Download PDF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Service Modal -->
+                <div id="editServiceModal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>Edit Product/Service</h2>
+                            <button class="modal-close" onclick="closeEditServiceModal()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" id="editServiceName" placeholder="Product/Service Name">
+                            </div>
+                            <div class="form-group">
+                                <label>Price</label>
+                                <input type="number" id="editServicePrice" placeholder="Price">
+                            </div>
+                            <div class="form-group">
+                                <label>Price Type</label>
+                                <select id="editPriceType">
+                                    <option value="fixed">Fixed</option>
+                                    <option value="perUnit">Per Unit</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="editServiceDescription" rows="3" placeholder="Description"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="closeEditServiceModal()">Cancel</button>
+                            <button class="btn btn-primary" onclick="saveServiceEdit()">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Setup Guide Modal -->
+                <div id="setupGuideModal" class="modal hidden">
+                    <div class="modal-content" style="max-width: 700px;">
+                        <div class="modal-header">
+                            <h2>🚀 Quick Setup Guide</h2>
+                            <button class="modal-close" onclick="closeSetupGuide()">×</button>
+                        </div>
+                        <div class="modal-body" style="line-height: 1.8;">
+                            <div style="background: #f0f4ff; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                                <strong>Welcome!</strong> Follow these simple steps to get your quote calculator up and running in minutes.
+                            </div>
+
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="color: var(--primary); margin-bottom: 8px;">Step 1: Add Your Business Info</h3>
+                                <p style="margin-bottom: 8px;">Fill in your company name, contact email, and phone number on this page.</p>
+                                <p style="color: var(--text-secondary); font-size: 14px;">💡 Tip: Upload a logo to make your calculator look more professional!</p>
+                            </div>
+
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="color: var(--primary); margin-bottom: 8px;">Step 2: Add Your Products & Services</h3>
+                                <p style="margin-bottom: 8px;">Go to "My Products & Services" and add the items you want to quote.</p>
+                                <p style="color: var(--text-secondary); font-size: 14px;">💡 Tip: Choose "Fixed" for flat rates, "Per Unit" for quantity-based pricing, or "Custom" for jobs that vary.</p>
+                            </div>
+
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="color: var(--primary); margin-bottom: 8px;">Step 3: Customize Your Quote Page</h3>
+                                <p style="margin-bottom: 8px;">Visit "My Quote Page" to customize the welcome message and colors.</p>
+                                <p style="color: var(--text-secondary); font-size: 14px;">💡 Tip: Use the preview pane to see changes in real-time!</p>
+                            </div>
+
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="color: var(--primary); margin-bottom: 8px;">Step 4: Share Your Calculator</h3>
+                                <p style="margin-bottom: 8px;">Copy the calculator link from "My Quote Page" and share it!</p>
+                                <p style="color: var(--text-secondary); font-size: 14px;">💡 Tip: Add it to your website, social media bio, or email signature.</p>
+                            </div>
+
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="color: var(--primary); margin-bottom: 8px;">Step 5: Manage Your Quotes</h3>
+                                <p style="margin-bottom: 8px;">Check "My Quotes" to see incoming quote requests and follow up with customers.</p>
+                                <p style="color: var(--text-secondary); font-size: 14px;">💡 Tip: Use the status dropdown to track which quotes need follow-up!</p>
+                            </div>
+
+                            <div style="background: #d1fae5; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                                <strong>🎉 That's it!</strong> You're ready to start collecting quotes. Questions? Feel free to explore the interface—everything is designed to be intuitive and easy to use.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" onclick="closeSetupGuide()">Got It!</button>
                         </div>
                     </div>
                 </div>
@@ -1156,6 +1259,11 @@
                                 <div class="form-group">
                                     <label>Welcome Message <span class="label-hint">(optional)</span></label>
                                     <textarea id="landingMessage" rows="4" placeholder="Tell customers about your services..."></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Services Disclaimer <span class="label-hint">(optional - shown in Select Services section)</span></label>
+                                    <textarea id="servicesDisclaimer" rows="2" placeholder="Example: Additional $50 charge for vans or larger vehicles"></textarea>
                                 </div>
 
                                 <div class="form-group">
@@ -1211,6 +1319,50 @@
                     </div>
                 </div>
             </main>
+            
+            <!-- Footer -->
+            <div style="position: fixed; bottom: 0; left: var(--sidebar-width); right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-secondary); z-index: 100;">
+                <div>© 2026 Logic Nerds. All rights reserved.</div>
+                <a href="#" onclick="toggleDisclaimerDrawer(); return false;" style="color: var(--primary); text-decoration: none;">Disclaimer</a>
+            </div>
+
+            <!-- Disclaimer Drawer -->
+            <div id="disclaimerDrawer" class="hidden" style="position: fixed; bottom: 0; left: var(--sidebar-width); right: 0; background: var(--bg-card); border-top: 2px solid var(--border); padding: 24px; max-height: 60vh; overflow-y: auto; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); z-index: 99;">
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3 style="font-size: 18px; font-weight: 600;">Legal Disclaimer</h3>
+                        <button onclick="toggleDisclaimerDrawer()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary);">×</button>
+                    </div>
+                    <div style="line-height: 1.8; color: var(--text-secondary); font-size: 14px;">
+                        <p style="margin-bottom: 12px;"><strong>IMPORTANT: PLEASE READ CAREFULLY</strong></p>
+                        
+                        <p style="margin-bottom: 12px;">This quote calculator tool ("Service") is provided by Logic Nerds for informational purposes only. By using this Service, you acknowledge and agree to the following:</p>
+                        
+                        <p style="margin-bottom: 12px;"><strong>1. Estimates Only</strong><br>
+                        All quotes generated are estimates based on information provided by the customer. Actual prices may vary based on the scope of work, unforeseen circumstances, site conditions, material costs, or other factors discovered during service delivery.</p>
+                        
+                        <p style="margin-bottom: 12px;"><strong>2. No Liability for Pricing Errors</strong><br>
+                        Logic Nerds is not responsible for any financial losses, damages, or disputes arising from incorrect pricing, customer-provided information, miscalculations, or discrepancies between quoted and actual prices. Users of this Service accept full responsibility for verifying quote accuracy before providing them to customers.</p>
+                        
+                        <p style="margin-bottom: 12px;"><strong>3. Customer-Provided Information</strong><br>
+                        Quotes are generated based solely on information entered by the customer. Logic Nerds is not liable for inaccurate, incomplete, or misleading information provided by customers that may result in quotes that do not reflect actual job requirements or costs.</p>
+                        
+                        <p style="margin-bottom: 12px;"><strong>4. No Guarantees</strong><br>
+                        Logic Nerds makes no warranties or guarantees regarding the accuracy, reliability, or completeness of quotes generated through this Service. The Service is provided "as is" without any express or implied warranties.</p>
+                        
+                        <p style="margin-bottom: 12px;"><strong>5. Business Owner Responsibility</strong><br>
+                        Business owners using this Service are solely responsible for: (a) verifying all quote accuracy before presenting to customers, (b) honoring or adjusting quotes as appropriate, (c) complying with all applicable laws and regulations, and (d) managing all customer relationships and expectations.</p>
+                        
+                        <p style="margin-bottom: 12px;"><strong>6. Limitation of Liability</strong><br>
+                        To the maximum extent permitted by law, Logic Nerds shall not be liable for any direct, indirect, incidental, special, consequential, or punitive damages arising from use of this Service, including but not limited to loss of profits, revenue, data, or business opportunities.</p>
+                        
+                        <p style="margin-bottom: 12px;"><strong>7. Indemnification</strong><br>
+                        You agree to indemnify and hold harmless Logic Nerds from any claims, damages, losses, or expenses (including attorney fees) arising from your use of this Service or any disputes with your customers regarding quotes generated.</p>
+                        
+                        <p style="margin-bottom: 12px;">By continuing to use this Service, you acknowledge that you have read, understood, and agree to be bound by this disclaimer.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1259,6 +1411,11 @@
         async function signup() {
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
+            
+            if (!email || !password) {
+                alert('Please enter an email address and password to create your account.');
+                return;
+            }
             
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -1320,6 +1477,7 @@
             const quotePageData = {
                 landingHeadline: document.getElementById('landingHeadline').value,
                 landingMessage: document.getElementById('landingMessage').value,
+                servicesDisclaimer: document.getElementById('servicesDisclaimer').value,
                 landingTextColor: document.getElementById('landingTextColor').value,
                 updatedAt: new Date().toISOString()
             };
@@ -1456,20 +1614,12 @@
                 description: description,
                 basePrice: parseFloat(price),
                 priceType: document.getElementById('priceType').value,
-                active: true
+                active: true,
+                createdAt: new Date().toISOString()
             };
 
             try {
-                if (editingServiceId) {
-                    // Update existing service
-                    await setDoc(doc(db, 'services', editingServiceId), serviceData, { merge: true });
-                    editingServiceId = null;
-                    document.querySelector('#servicesSection .btn-primary').textContent = 'Add';
-                } else {
-                    // Add new service
-                    serviceData.createdAt = new Date().toISOString();
-                    await addDoc(collection(db, 'services'), serviceData);
-                }
+                await addDoc(collection(db, 'services'), serviceData);
                 
                 // Clear form
                 document.getElementById('serviceName').value = '';
@@ -1492,24 +1642,53 @@
 
                 const service = serviceDoc.data();
                 
-                // Populate form
-                document.getElementById('serviceName').value = service.name;
-                document.getElementById('serviceDescription').value = service.description || '';
-                document.getElementById('servicePrice').value = service.basePrice;
-                document.getElementById('priceType').value = service.priceType;
+                // Populate modal
+                document.getElementById('editServiceName').value = service.name;
+                document.getElementById('editServiceDescription').value = service.description || '';
+                document.getElementById('editServicePrice').value = service.basePrice;
+                document.getElementById('editPriceType').value = service.priceType;
 
                 // Track that we're editing
                 editingServiceId = serviceId;
                 
-                // Change button text
-                document.querySelector('#servicesSection .btn-primary').textContent = 'Update';
-
-                // Scroll to form
-                document.getElementById('serviceName').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                document.getElementById('serviceName').focus();
+                // Show modal
+                document.getElementById('editServiceModal').classList.remove('hidden');
 
             } catch (error) {
                 alert('Error loading service: ' + error.message);
+            }
+        }
+
+        function closeEditServiceModal() {
+            document.getElementById('editServiceModal').classList.add('hidden');
+            editingServiceId = null;
+        }
+
+        async function saveServiceEdit() {
+            if (!editingServiceId) return;
+
+            const name = document.getElementById('editServiceName').value.trim();
+            const description = document.getElementById('editServiceDescription').value.trim();
+            const price = document.getElementById('editServicePrice').value;
+
+            if (!name || !price) {
+                alert('Please enter a name and price');
+                return;
+            }
+
+            const serviceData = {
+                name: name,
+                description: description,
+                basePrice: parseFloat(price),
+                priceType: document.getElementById('editPriceType').value
+            };
+
+            try {
+                await setDoc(doc(db, 'services', editingServiceId), serviceData, { merge: true });
+                closeEditServiceModal();
+                await loadServices();
+            } catch (error) {
+                alert('Error saving service: ' + error.message);
             }
         }
 
@@ -1618,6 +1797,7 @@
                     // Load landing page data
                     document.getElementById('landingHeadline').value = data.landingHeadline || '';
                     document.getElementById('landingMessage').value = data.landingMessage || '';
+                    document.getElementById('servicesDisclaimer').value = data.servicesDisclaimer || '';
                     document.getElementById('landingTextColor').value = data.landingTextColor || '#1f2937';
                     document.getElementById('landingTextColorHex').value = data.landingTextColor || '#1f2937';
                     
@@ -2055,33 +2235,52 @@
         }
 
         async function updateQuoteNotes(quoteId, notes) {
-            try {
-                await setDoc(doc(window.db, 'quotes', quoteId), {
-                    internalNotes: notes,
-                    lastTouched: new Date().toISOString()
-                }, { merge: true });
-            } catch (error) {
-                console.error('Error updating notes:', error);
-                alert('Error saving notes');
-            }
+            // Just update in memory, don't save yet
+            window.pendingQuoteChanges = window.pendingQuoteChanges || {};
+            window.pendingQuoteChanges.internalNotes = notes;
         }
 
         async function updateQuoteStatus(quoteId, newStatus) {
+            // Just update in memory, don't save yet
+            window.pendingQuoteChanges = window.pendingQuoteChanges || {};
+            window.pendingQuoteChanges.quoteStatus = newStatus;
+        }
+
+        async function saveQuoteChanges() {
+            if (!currentQuoteId) return;
+
             try {
-                await setDoc(doc(window.db, 'quotes', quoteId), {
-                    quoteStatus: newStatus,
-                    lastTouched: new Date().toISOString()
-                }, { merge: true });
-                await loadQuotes(); // Refresh the quotes list
+                const changes = window.pendingQuoteChanges || {};
+                changes.lastTouched = new Date().toISOString();
+                
+                await setDoc(doc(window.db, 'quotes', currentQuoteId), changes, { merge: true });
+                
+                window.pendingQuoteChanges = {};
+                closeQuoteModal();
+                await loadQuotes();
+                alert('Changes saved successfully!');
             } catch (error) {
-                console.error('Error updating status:', error);
-                alert('Error updating status');
+                console.error('Error saving changes:', error);
+                alert('Error saving changes');
             }
         }
 
         function emailCustomer(email, quoteNumber) {
             const subject = encodeURIComponent(`Re: Your Quote ${quoteNumber}`);
             window.location.href = `mailto:${email}?subject=${subject}`;
+        }
+
+        function toggleDisclaimerDrawer() {
+            const drawer = document.getElementById('disclaimerDrawer');
+            drawer.classList.toggle('hidden');
+        }
+
+        function showSetupGuide() {
+            document.getElementById('setupGuideModal').classList.remove('hidden');
+        }
+
+        function closeSetupGuide() {
+            document.getElementById('setupGuideModal').classList.add('hidden');
         }
 
         // Make functions globally available
@@ -2093,6 +2292,8 @@
         window.saveBusinessSettings = saveBusinessSettings;
         window.addService = addService;
         window.editService = editService;
+        window.saveServiceEdit = saveServiceEdit;
+        window.closeEditServiceModal = closeEditServiceModal;
         window.toggleServiceActive = toggleServiceActive;
         window.deleteService = deleteService;
         window.loadBusinessData = loadBusinessData;
@@ -2109,7 +2310,11 @@
         window.downloadQuotePDF = downloadQuotePDF;
         window.updateQuoteNotes = updateQuoteNotes;
         window.updateQuoteStatus = updateQuoteStatus;
+        window.saveQuoteChanges = saveQuoteChanges;
         window.emailCustomer = emailCustomer;
+        window.toggleDisclaimerDrawer = toggleDisclaimerDrawer;
+        window.showSetupGuide = showSetupGuide;
+        window.closeSetupGuide = closeSetupGuide;
 
         // Import storage functions for global use
         window.storageRef = ref;
