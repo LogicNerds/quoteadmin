@@ -1170,7 +1170,7 @@
                                 <input type="text" id="unitType" placeholder="per visit, per hour..." class="service-input">
                                 <span class="help-icon" data-tooltip="Examples: per hour, per visit, per room, per sq ft, per vehicle">?</span>
                             </div>
-                            <input type="text" id="serviceDescription" placeholder="Description" class="service-input service-input-description">
+                            <textarea id="serviceDescription" placeholder="Description" class="service-input service-input-description" rows="1" style="resize: vertical; min-height: 42px; overflow: hidden;" oninput="this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'"></textarea>
                             <div style="display: flex; justify-content: flex-end;">
                                 <button class="btn btn-primary" onclick="addService()" style="width: 80px; text-align: center;">Add</button>
                             </div>
