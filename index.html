@@ -2450,7 +2450,7 @@
                                 <option value="custom">Custom</option>
                             </select>
                             <input type="text" class="service-input bulk-unit" placeholder="per visit, per hour..." style="display: none;">
-                            <input type="text" class="service-input service-input-description bulk-desc" placeholder="Description">
+                            <textarea class="service-input service-input-description bulk-desc" placeholder="Description" rows="1" style="resize: vertical; min-height: 42px; overflow: hidden;" oninput="this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'"></textarea>
                             <div></div>
                         </div>
                     `;
