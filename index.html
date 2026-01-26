@@ -1145,12 +1145,12 @@
                             <a href="#" onclick="toggleBulkAdd(); return false;" style="color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 500;" id="bulkAddToggle">Bulk Add</a>
                         </div>
                         
-                        <!-- Single Add Headers -->
-                        <div id="singleAddHeaders" style="display: grid; grid-template-columns: 2fr 120px 150px 150px 2fr 100px; gap: 12px; padding: 0 0 8px 0; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">
+                        <!-- Shared Headers for Single and Bulk -->
+                        <div style="display: grid; grid-template-columns: 2fr 120px 150px 150px 2fr 100px; gap: 12px; padding: 0 0 8px 0; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">
                             <div>Product/Service Name</div>
                             <div>Price</div>
                             <div>Price Type</div>
-                            <div id="singleUnitTypeHeader" style="display: none;">Unit Type</div>
+                            <div id="unitTypeHeader">Unit Type</div>
                             <div>Description</div>
                             <div></div>
                         </div>
@@ -1172,15 +1172,6 @@
                             </div>
                             <input type="text" id="serviceDescription" placeholder="Description" class="service-input service-input-description">
                             <button class="btn btn-primary" onclick="addService()">Add</button>
-                        </div>
-                        
-                        <!-- Bulk Add Headers -->
-                        <div id="bulkAddHeaders" class="hidden" style="display: grid; grid-template-columns: 2fr 120px 150px 150px 2fr; gap: 12px; padding: 0 0 8px 0; margin-top: 16px; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">
-                            <div>Product/Service Name</div>
-                            <div>Price</div>
-                            <div>Price Type</div>
-                            <div>Unit Type</div>
-                            <div>Description</div>
                         </div>
                         
                         <div id="bulkAddContainer" class="hidden"></div>
@@ -1709,14 +1700,11 @@
         function toggleUnitTypeField() {
             const priceType = document.getElementById('priceType').value;
             const unitTypeContainer = document.getElementById('unitTypeContainer');
-            const unitTypeHeader = document.getElementById('singleUnitTypeHeader');
             
             if (priceType === 'perUnit') {
                 unitTypeContainer.style.display = 'flex';
-                unitTypeHeader.style.display = 'block';
             } else {
                 unitTypeContainer.style.display = 'none';
-                unitTypeHeader.style.display = 'none';
                 document.getElementById('unitType').value = '';
             }
         }
@@ -2433,18 +2421,14 @@
 
         function toggleBulkAdd() {
             const singleRow = document.getElementById('singleAddRow');
-            const singleHeaders = document.getElementById('singleAddHeaders');
             const bulkContainer = document.getElementById('bulkAddContainer');
-            const bulkHeaders = document.getElementById('bulkAddHeaders');
             const bulkBtn = document.getElementById('bulkAddSaveBtn');
             const toggleLink = document.getElementById('bulkAddToggle');
 
             if (bulkContainer.classList.contains('hidden')) {
                 // Show bulk add
                 singleRow.classList.add('hidden');
-                singleHeaders.classList.add('hidden');
                 bulkContainer.classList.remove('hidden');
-                bulkHeaders.classList.remove('hidden');
                 bulkBtn.classList.remove('hidden');
                 toggleLink.textContent = 'Single Add';
 
@@ -2452,7 +2436,7 @@
                 let html = '';
                 for (let i = 0; i < 10; i++) {
                     html += `
-                        <div class="service-add-row" style="margin-bottom: 12px; grid-template-columns: 2fr 120px 150px 150px 2fr;">
+                        <div class="service-add-row" style="margin-bottom: 12px; grid-template-columns: 2fr 120px 150px 150px 2fr 100px;">
                             <input type="text" class="service-input bulk-name" placeholder="Product/Service Name">
                             <input type="number" class="service-input service-input-price bulk-price" placeholder="Price (optional for Custom)">
                             <select class="service-input service-input-type bulk-type" onchange="toggleBulkUnitType(this)">
@@ -2462,6 +2446,7 @@
                             </select>
                             <input type="text" class="service-input bulk-unit" placeholder="per visit, per hour..." style="display: none;">
                             <input type="text" class="service-input service-input-description bulk-desc" placeholder="Description">
+                            <div></div>
                         </div>
                     `;
                 }
@@ -2469,9 +2454,7 @@
             } else {
                 // Show single add
                 singleRow.classList.remove('hidden');
-                singleHeaders.classList.remove('hidden');
                 bulkContainer.classList.add('hidden');
-                bulkHeaders.classList.add('hidden');
                 bulkBtn.classList.add('hidden');
                 toggleLink.textContent = 'Bulk Add';
                 bulkContainer.innerHTML = '';
