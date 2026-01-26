@@ -1150,7 +1150,7 @@
                             <div>Product/Service Name</div>
                             <div>Price</div>
                             <div>Price Type</div>
-                            <div id="unitTypeHeader">Unit Type</div>
+                            <div id="unitTypeHeader" style="display: none;">Unit Type</div>
                             <div>Description</div>
                             <div></div>
                         </div>
@@ -1171,7 +1171,7 @@
                                 <span class="help-icon" data-tooltip="Examples: per hour, per visit, per room, per sq ft, per vehicle">?</span>
                             </div>
                             <input type="text" id="serviceDescription" placeholder="Description" class="service-input service-input-description">
-                            <button class="btn btn-primary" onclick="addService()">Add</button>
+                            <button class="btn btn-primary" onclick="addService()" style="width: 100%;">Add</button>
                         </div>
                         
                         <div id="bulkAddContainer" class="hidden"></div>
@@ -1700,11 +1700,14 @@
         function toggleUnitTypeField() {
             const priceType = document.getElementById('priceType').value;
             const unitTypeContainer = document.getElementById('unitTypeContainer');
+            const unitTypeHeader = document.getElementById('unitTypeHeader');
             
             if (priceType === 'perUnit') {
                 unitTypeContainer.style.display = 'flex';
+                unitTypeHeader.style.display = 'block';
             } else {
                 unitTypeContainer.style.display = 'none';
+                unitTypeHeader.style.display = 'none';
                 document.getElementById('unitType').value = '';
             }
         }
