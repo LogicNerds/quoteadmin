@@ -1871,28 +1871,74 @@
                 return;
             }
 
-            // Create header row
+            // Collect all services
+            const services = [];
+            snapshot.forEach((doc) => {
+                services.push({ id: doc.id, ...doc.data() });
+            });
+
+            // Apply sorting if set
+            if (window.serviceSortColumn) {
+                services.sort((a, b) => {
+                    let aVal, bVal;
+                    
+                    switch(window.serviceSortColumn) {
+                        case 'active':
+                            aVal = a.active !== false ? 1 : 0;
+                            bVal = b.active !== false ? 1 : 0;
+                            break;
+                        case 'name':
+                            aVal = a.name.toLowerCase();
+                            bVal = b.name.toLowerCase();
+                            break;
+                        case 'price':
+                            aVal = a.basePrice;
+                            bVal = b.basePrice;
+                            break;
+                        case 'type':
+                            aVal = a.priceType;
+                            bVal = b.priceType;
+                            break;
+                        case 'description':
+                            aVal = (a.description || '').toLowerCase();
+                            bVal = (b.description || '').toLowerCase();
+                            break;
+                    }
+                    
+                    if (aVal < bVal) return window.serviceSortDirection === 'asc' ? -1 : 1;
+                    if (aVal > bVal) return window.serviceSortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            // Create header row with sortable columns
+            const sortArrow = (column) => {
+                if (window.serviceSortColumn === column) {
+                    return window.serviceSortDirection === 'asc' ? ' ▲' : ' ▼';
+                }
+                return ' ⇅';
+            };
+
             let html = `
                 <div class="service-row service-row-header">
-                    <div>Active</div>
-                    <div>Name</div>
-                    <div>Price</div>
-                    <div>Type</div>
-                    <div>Description</div>
+                    <div style="cursor: pointer;" onclick="sortServices('active')">Active${sortArrow('active')}</div>
+                    <div style="cursor: pointer;" onclick="sortServices('name')">Name${sortArrow('name')}</div>
+                    <div style="cursor: pointer;" onclick="sortServices('price')">Price${sortArrow('price')}</div>
+                    <div style="cursor: pointer;" onclick="sortServices('type')">Type${sortArrow('type')}</div>
+                    <div style="cursor: pointer;" onclick="sortServices('description')">Description${sortArrow('description')}</div>
                     <div></div>
                 </div>
             `;
 
             // Add service rows
-            snapshot.forEach((doc) => {
-                const service = doc.data();
-                const isActive = service.active !== false; // default to true if not set
-                
-                const priceTypeLabels = {
-                    fixed: 'Fixed',
-                    perUnit: 'Per Unit',
-                    custom: 'Custom'
-                };
+            const priceTypeLabels = {
+                fixed: 'Fixed',
+                perUnit: 'Per Unit',
+                custom: 'Custom'
+            };
+
+            services.forEach((service) => {
+                const isActive = service.active !== false;
                 
                 html += `
                     <div class="service-row">
@@ -1901,7 +1947,7 @@
                                 type="checkbox" 
                                 class="service-checkbox" 
                                 ${isActive ? 'checked' : ''} 
-                                onchange="toggleServiceActive('${doc.id}', this.checked)"
+                                onchange="toggleServiceActive('${service.id}', this.checked)"
                             >
                         </div>
                         <div class="service-name">${service.name}</div>
@@ -1909,14 +1955,25 @@
                         <div class="service-type">${priceTypeLabels[service.priceType]}</div>
                         <div class="service-desc">${service.description || ''}</div>
                         <div style="display: flex; gap: 8px;">
-                            <button class="btn btn-secondary btn-sm" onclick="editService('${doc.id}')">Edit</button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteService('${doc.id}')">Delete</button>
+                            <button class="btn btn-secondary btn-sm" onclick="editService('${service.id}')">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteService('${service.id}')">Delete</button>
                         </div>
                     </div>
                 `;
             });
 
             servicesList.innerHTML = html;
+        }
+
+        function sortServices(column) {
+            // Toggle direction if clicking same column, otherwise default to ascending
+            if (window.serviceSortColumn === column) {
+                window.serviceSortDirection = window.serviceSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                window.serviceSortColumn = column;
+                window.serviceSortDirection = 'asc';
+            }
+            loadServices();
         }
 
         async function loadBusinessData() {
@@ -2565,6 +2622,7 @@
         window.toggleUnitTypeField = toggleUnitTypeField;
         window.toggleEditUnitTypeField = toggleEditUnitTypeField;
         window.toggleBulkUnitType = toggleBulkUnitType;
+        window.sortServices = sortServices;
 
         // Import storage functions for global use
         window.storageRef = ref;
