@@ -1126,6 +1126,19 @@
 
                         <button class="btn btn-success" onclick="saveBusinessSettings()">Save Settings</button>
                     </div>
+
+                    <!-- Team Members Section -->
+                    <div class="card" id="teamMembersCard">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Team Members</h3>
+                                <p class="card-description">Manage who has access to your account</p>
+                            </div>
+                            <button class="btn btn-primary" id="inviteTeamBtn" onclick="showInviteModal()" style="display: none;">Invite Team Member</button>
+                        </div>
+
+                        <div id="teamMembersList"></div>
+                    </div>
                 </div>
 
                 <!-- Services Section -->
@@ -1334,6 +1347,51 @@
                     </div>
                 </div>
 
+                <!-- Invite Team Member Modal -->
+                <div id="inviteTeamModal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>Invite Team Member</h2>
+                            <button class="modal-close" onclick="closeInviteModal()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <p style="margin-bottom: 16px; color: var(--text-secondary);">Team members will have access to manage products, services, and quotes. You can have up to 3 total users (including yourself).</p>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" id="inviteEmail" placeholder="teammate@example.com">
+                            </div>
+                            <div id="inviteError" style="color: var(--danger); font-size: 14px; margin-top: 8px; display: none;"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="closeInviteModal()">Cancel</button>
+                            <button class="btn btn-primary" onclick="sendInvitation()">Send Invitation</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transfer Admin Modal -->
+                <div id="transferAdminModal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>Transfer Admin Rights</h2>
+                            <button class="modal-close" onclick="closeTransferAdminModal()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <p style="margin-bottom: 16px; color: var(--text-secondary);"><strong>Warning:</strong> This will make the selected user the admin and change your role to a regular team member. You will no longer be able to manage team members or transfer admin rights.</p>
+                            <div class="form-group">
+                                <label>Transfer Admin Rights To:</label>
+                                <select id="transferAdminSelect">
+                                    <option value="">Select a team member...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="closeTransferAdminModal()">Cancel</button>
+                            <button class="btn btn-danger" onclick="confirmTransferAdmin()">Transfer Admin Rights</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- My Quote Page Section -->
                 <div id="quotepageSection" class="hidden">
                     <div class="top-bar">
@@ -1500,11 +1558,40 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 window.currentUser = user;
+                
+                // Load user role and business association
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (userDoc.exists()) {
+                    window.currentUserData = userDoc.data();
+                    window.businessId = userDoc.data().businessId;
+                    window.userRole = userDoc.data().role;
+                } else {
+                    // First time user - they become admin of their own business
+                    window.businessId = user.uid;
+                    window.userRole = 'admin';
+                    window.currentUserData = {
+                        email: user.email,
+                        role: 'admin',
+                        businessId: user.uid,
+                        createdAt: new Date().toISOString()
+                    };
+                    await setDoc(doc(db, 'users', user.uid), window.currentUserData);
+                    await setDoc(doc(db, 'businesses', user.uid), {
+                        ownerId: user.uid,
+                        userCount: 1,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+                
                 document.getElementById('authSection').classList.add('hidden');
                 document.getElementById('adminPanel').classList.remove('hidden');
                 await loadBusinessData();
+                await loadTeamMembers();
             } else {
                 window.currentUser = null;
+                window.currentUserData = null;
+                window.businessId = null;
+                window.userRole = null;
                 document.getElementById('authSection').classList.remove('hidden');
                 document.getElementById('adminPanel').classList.add('hidden');
             }
@@ -1586,7 +1673,7 @@
             };
 
             try {
-                await setDoc(doc(db, 'businesses', currentUser.uid), quotePageData, { merge: true });
+                await setDoc(doc(db, 'businesses', window.businessId), quotePageData, { merge: true });
                 alert('✓ Quote page saved successfully!');
             } catch (error) {
                 alert('Error saving: ' + error.message);
@@ -1654,7 +1741,7 @@
                         document.getElementById('logoPreviewContainer').classList.remove('hidden');
                         
                         // Auto-save to business settings
-                        await setDoc(doc(db, 'businesses', currentUser.uid), {
+                        await setDoc(doc(db, 'businesses', window.businessId), {
                             logoUrl: downloadURL,
                             updatedAt: new Date().toISOString()
                         }, { merge: true });
@@ -1688,7 +1775,7 @@
             };
 
             try {
-                await setDoc(doc(db, 'businesses', currentUser.uid), businessData, { merge: true });
+                await setDoc(doc(db, 'businesses', window.businessId), businessData, { merge: true });
                 alert('✓ Settings saved successfully!');
                 updateCalculatorUrl();
                 // Update sidebar business name
@@ -1729,7 +1816,7 @@
             }
 
             const serviceData = {
-                businessId: currentUser.uid,
+                businessId: window.businessId,
                 name: name,
                 description: description,
                 basePrice: parseFloat(price),
@@ -1855,7 +1942,7 @@
         async function loadServices() {
             if (!currentUser) return;
 
-            const servicesQuery = query(collection(db, 'services'), where('businessId', '==', currentUser.uid));
+            const servicesQuery = query(collection(db, 'services'), where('businessId', '==', window.businessId));
             const snapshot = await getDocs(servicesQuery);
             
             const servicesList = document.getElementById('servicesList');
@@ -1980,7 +2067,7 @@
             if (!currentUser) return;
 
             try {
-                const businessDoc = await getDoc(doc(db, 'businesses', currentUser.uid));
+                const businessDoc = await getDoc(doc(db, 'businesses', window.businessId));
                 if (businessDoc.exists()) {
                     const data = businessDoc.data();
                     document.getElementById('businessName').value = data.businessName || '';
@@ -2017,7 +2104,7 @@
 
         function updateCalculatorUrl() {
             if (!currentUser) return;
-            const calculatorUrl = `https://logicnerds.github.io/quoteui/?id=${currentUser.uid}`;
+            const calculatorUrl = `https://logicnerds.github.io/quoteui/?id=${window.businessId}`;
             document.getElementById('calculatorUrl').textContent = calculatorUrl;
             
             // Generate embed code
@@ -2056,7 +2143,7 @@
             try {
                 const quotesQuery = query(
                     collection(db, 'quotes'), 
-                    where('businessId', '==', currentUser.uid)
+                    where('businessId', '==', window.businessId)
                 );
                 const snapshot = await getDocs(quotesQuery);
 
@@ -2481,6 +2568,214 @@
             document.getElementById('setupGuideModal').classList.add('hidden');
         }
 
+        // Team Management Functions
+        async function loadTeamMembers() {
+            if (!window.businessId) return;
+
+            const isAdmin = window.userRole === 'admin';
+            
+            // Show/hide invite button based on role and user count
+            const inviteBtn = document.getElementById('inviteTeamBtn');
+            const businessDoc = await getDoc(doc(db, 'businesses', window.businessId));
+            const userCount = businessDoc.data()?.userCount || 1;
+            
+            if (isAdmin && userCount < 3) {
+                inviteBtn.style.display = 'block';
+            } else {
+                inviteBtn.style.display = 'none';
+            }
+
+            // Load all users for this business
+            const usersQuery = query(collection(db, 'users'), where('businessId', '==', window.businessId));
+            const usersSnapshot = await getDocs(usersQuery);
+            
+            const teamList = document.getElementById('teamMembersList');
+            
+            if (usersSnapshot.empty) {
+                teamList.innerHTML = '<p style="color: var(--text-secondary); padding: 20px; text-align: center;">No team members yet</p>';
+                return;
+            }
+
+            let html = `
+                <div class="service-row service-row-header">
+                    <div>Email</div>
+                    <div>Role</div>
+                    <div>Joined</div>
+                    <div></div>
+                </div>
+            `;
+
+            usersSnapshot.forEach((userDoc) => {
+                const userData = userDoc.data();
+                const isCurrentUser = userDoc.id === window.currentUser.uid;
+                const joinedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString() : 'N/A';
+                
+                html += `
+                    <div class="service-row">
+                        <div>${userData.email}${isCurrentUser ? ' <span style="color: var(--primary); font-size: 12px;">(You)</span>' : ''}</div>
+                        <div><span style="text-transform: capitalize; padding: 4px 8px; background: ${userData.role === 'admin' ? 'var(--primary)' : 'var(--text-secondary)'}; color: white; border-radius: 4px; font-size: 12px;">${userData.role}</span></div>
+                        <div>${joinedDate}</div>
+                        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                            ${isAdmin && !isCurrentUser ? `<button class="btn btn-danger btn-sm" onclick="removeTeamMember('${userDoc.id}', '${userData.email}')">Remove</button>` : ''}
+                            ${isAdmin && isCurrentUser ? `<button class="btn btn-secondary btn-sm" onclick="showTransferAdminModal()">Transfer Admin</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            teamList.innerHTML = html;
+        }
+
+        function showInviteModal() {
+            document.getElementById('inviteTeamModal').classList.remove('hidden');
+            document.getElementById('inviteEmail').value = '';
+            document.getElementById('inviteError').style.display = 'none';
+        }
+
+        function closeInviteModal() {
+            document.getElementById('inviteTeamModal').classList.add('hidden');
+        }
+
+        async function sendInvitation() {
+            const email = document.getElementById('inviteEmail').value.trim();
+            const errorDiv = document.getElementById('inviteError');
+            
+            if (!email) {
+                errorDiv.textContent = 'Please enter an email address';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Check if user already exists
+            const usersQuery = query(collection(db, 'users'), where('email', '==', email));
+            const existingUser = await getDocs(usersQuery);
+            if (!existingUser.empty) {
+                errorDiv.textContent = 'This email is already associated with an account';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Check user count
+            const businessDoc = await getDoc(doc(db, 'businesses', window.businessId));
+            const userCount = businessDoc.data()?.userCount || 1;
+            if (userCount >= 3) {
+                errorDiv.textContent = 'You have reached the maximum of 3 team members';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                // Create invitation token
+                const invitationToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
+                const expiresAt = new Date();
+                expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+
+                // Store invitation
+                await setDoc(doc(db, 'invitations', invitationToken), {
+                    email: email,
+                    businessId: window.businessId,
+                    invitedBy: window.currentUser.uid,
+                    createdAt: new Date().toISOString(),
+                    expiresAt: expiresAt.toISOString()
+                });
+
+                // Send webhook to n8n
+                const businessData = (await getDoc(doc(db, 'businesses', window.businessId))).data();
+                const businessName = businessData?.businessName || 'the team';
+                
+                await fetch('https://elijahchristo.app.n8n.cloud/webhook/team-invitation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        inviteeEmail: email,
+                        businessName: businessName,
+                        inviterName: window.currentUser.email,
+                        inviterEmail: window.currentUser.email,
+                        invitationLink: `${window.location.origin}${window.location.pathname}?invite=${invitationToken}`,
+                        expiresAt: expiresAt.toISOString()
+                    })
+                });
+
+                alert('✓ Invitation sent to ' + email);
+                closeInviteModal();
+            } catch (error) {
+                console.error('Error sending invitation:', error);
+                errorDiv.textContent = 'Error sending invitation: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        async function removeTeamMember(userId, email) {
+            if (!confirm(`Remove ${email} from your team?`)) return;
+
+            try {
+                await deleteDoc(doc(db, 'users', userId));
+                
+                // Decrement user count
+                const businessDoc = await getDoc(doc(db, 'businesses', window.businessId));
+                const userCount = businessDoc.data()?.userCount || 2;
+                await setDoc(doc(db, 'businesses', window.businessId), {
+                    userCount: Math.max(1, userCount - 1)
+                }, { merge: true });
+
+                alert('✓ Team member removed');
+                await loadTeamMembers();
+            } catch (error) {
+                alert('Error removing team member: ' + error.message);
+            }
+        }
+
+        async function showTransferAdminModal() {
+            // Load team members for dropdown
+            const usersQuery = query(collection(db, 'users'), where('businessId', '==', window.businessId));
+            const usersSnapshot = await getDocs(usersQuery);
+            
+            const select = document.getElementById('transferAdminSelect');
+            select.innerHTML = '<option value="">Select a team member...</option>';
+            
+            usersSnapshot.forEach((userDoc) => {
+                if (userDoc.id !== window.currentUser.uid) {
+                    const userData = userDoc.data();
+                    select.innerHTML += `<option value="${userDoc.id}">${userData.email}</option>`;
+                }
+            });
+
+            document.getElementById('transferAdminModal').classList.remove('hidden');
+        }
+
+        function closeTransferAdminModal() {
+            document.getElementById('transferAdminModal').classList.add('hidden');
+        }
+
+        async function confirmTransferAdmin() {
+            const newAdminId = document.getElementById('transferAdminSelect').value;
+            
+            if (!newAdminId) {
+                alert('Please select a team member');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to transfer admin rights? You will become a regular team member.')) {
+                return;
+            }
+
+            try {
+                // Update new admin
+                await setDoc(doc(db, 'users', newAdminId), { role: 'admin' }, { merge: true });
+                
+                // Update business owner
+                await setDoc(doc(db, 'businesses', window.businessId), { ownerId: newAdminId }, { merge: true });
+                
+                // Downgrade current user to regular user
+                await setDoc(doc(db, 'users', window.currentUser.uid), { role: 'user' }, { merge: true });
+                
+                alert('✓ Admin rights transferred successfully');
+                window.location.reload(); // Reload to update UI
+            } catch (error) {
+                alert('Error transferring admin: ' + error.message);
+            }
+        }
+
         function toggleBulkAdd() {
             const singleRow = document.getElementById('singleAddRow');
             const bulkContainer = document.getElementById('bulkAddContainer');
@@ -2540,7 +2835,7 @@
                 // For other types, price is required
                 if (name && (price || type === 'custom')) {
                     services.push({
-                        businessId: currentUser.uid,
+                        businessId: window.businessId,
                         name: name,
                         description: desc,
                         basePrice: price ? parseFloat(price) : 0,
@@ -2623,6 +2918,14 @@
         window.toggleEditUnitTypeField = toggleEditUnitTypeField;
         window.toggleBulkUnitType = toggleBulkUnitType;
         window.sortServices = sortServices;
+        window.loadTeamMembers = loadTeamMembers;
+        window.showInviteModal = showInviteModal;
+        window.closeInviteModal = closeInviteModal;
+        window.sendInvitation = sendInvitation;
+        window.removeTeamMember = removeTeamMember;
+        window.showTransferAdminModal = showTransferAdminModal;
+        window.closeTransferAdminModal = closeTransferAdminModal;
+        window.confirmTransferAdmin = confirmTransferAdmin;
 
         // Import storage functions for global use
         window.storageRef = ref;
