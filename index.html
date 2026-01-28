@@ -2811,7 +2811,7 @@
                 const businessData = (await getDoc(doc(db, 'businesses', window.businessId))).data();
                 const businessName = businessData?.businessName || 'the team';
                 
-                const webhookResponse = await fetch('https://elijahchristo.app.n8n.cloud/webhook-test/team-invitation', {
+                const webhookResponse = await fetch('https://elijahchristo.app.n8n.cloud/webhook/team-invitation', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
