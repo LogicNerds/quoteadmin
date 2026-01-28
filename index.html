@@ -991,6 +991,15 @@
     <!-- Auth Section -->
     <div id="authSection" class="auth-container">
         <img src="https://raw.githubusercontent.com/LogicNerds/quoteadmin/main/quickquoteassets/Quick%20Quote%20Logo.png" alt="My Quick Quote" style="width: 100%; max-width: 240px; height: auto; margin: 0 auto 24px; display: block;">
+        
+        <!-- Invitation Banner (hidden by default) -->
+        <div id="invitationBanner" style="display: none; background: #dbeafe; border: 1px solid #3b82f6; border-radius: 8px; padding: 12px; margin-bottom: 20px; text-align: center;">
+            <p style="margin: 0; color: #1e40af; font-size: 14px; font-weight: 500;">
+                🎉 You've been invited to join a team!<br>
+                <span style="font-weight: normal; font-size: 13px;" id="invitationEmail"></span>
+            </p>
+        </div>
+        
         <p class="subtitle">Sign in to manage your quote calculator</p>
         <div class="form-group">
             <label>Email Address</label>
@@ -1554,6 +1563,34 @@
         window.storage = storage;
         window.currentUser = null;
 
+        // Check for invitation token on page load
+        (async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const inviteToken = urlParams.get('invite');
+            
+            if (inviteToken) {
+                try {
+                    const inviteDoc = await getDoc(doc(db, 'invitations', inviteToken));
+                    
+                    if (inviteDoc.exists()) {
+                        const inviteData = inviteDoc.data();
+                        
+                        // Check if not expired
+                        if (new Date(inviteData.expiresAt) > new Date()) {
+                            // Show invitation banner
+                            document.getElementById('invitationBanner').style.display = 'block';
+                            document.getElementById('invitationEmail').textContent = `Use ${inviteData.email} to accept this invitation`;
+                            
+                            // Pre-fill email
+                            document.getElementById('authEmail').value = inviteData.email;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking invitation:', error);
+                }
+            }
+        })();
+
         // Auth state listener
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -1608,8 +1645,65 @@
             }
             
             try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                console.log('User created:', userCredential.user.uid);
+                // Check if there's an invitation token in URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const inviteToken = urlParams.get('invite');
+                
+                if (inviteToken) {
+                    // Verify invitation exists and matches email
+                    const inviteDoc = await getDoc(doc(db, 'invitations', inviteToken));
+                    
+                    if (!inviteDoc.exists()) {
+                        alert('Invalid or expired invitation link.');
+                        return;
+                    }
+                    
+                    const inviteData = inviteDoc.data();
+                    
+                    // Check if invitation is expired
+                    if (new Date(inviteData.expiresAt) < new Date()) {
+                        alert('This invitation has expired. Please request a new invitation.');
+                        await deleteDoc(doc(db, 'invitations', inviteToken));
+                        return;
+                    }
+                    
+                    // Check if email matches invitation
+                    if (inviteData.email.toLowerCase() !== email.toLowerCase()) {
+                        alert(`This invitation was sent to ${inviteData.email}. Please use that email address.`);
+                        return;
+                    }
+                    
+                    // Create user account
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    
+                    // Link user to business as team member
+                    await setDoc(doc(db, 'users', userCredential.user.uid), {
+                        email: email,
+                        role: 'user',
+                        businessId: inviteData.businessId,
+                        invitedBy: inviteData.invitedBy,
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                    // Increment user count
+                    const businessDoc = await getDoc(doc(db, 'businesses', inviteData.businessId));
+                    const currentCount = businessDoc.data()?.userCount || 1;
+                    await setDoc(doc(db, 'businesses', inviteData.businessId), {
+                        userCount: currentCount + 1
+                    }, { merge: true });
+                    
+                    // Delete the invitation
+                    await deleteDoc(doc(db, 'invitations', inviteToken));
+                    
+                    // Clear URL parameter
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    
+                    alert('✓ Account created! You are now a team member.');
+                } else {
+                    // Regular signup - user becomes admin of their own business
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    console.log('User created:', userCredential.user.uid);
+                }
             } catch (error) {
                 alert('Signup error: ' + error.message);
             }
@@ -2589,9 +2683,13 @@
             const usersQuery = query(collection(db, 'users'), where('businessId', '==', window.businessId));
             const usersSnapshot = await getDocs(usersQuery);
             
+            // Load pending invitations
+            const invitationsQuery = query(collection(db, 'invitations'), where('businessId', '==', window.businessId));
+            const invitationsSnapshot = await getDocs(invitationsQuery);
+            
             const teamList = document.getElementById('teamMembersList');
             
-            if (usersSnapshot.empty) {
+            if (usersSnapshot.empty && invitationsSnapshot.empty) {
                 teamList.innerHTML = '<p style="color: var(--text-secondary); padding: 20px; text-align: center;">No team members yet</p>';
                 return;
             }
@@ -2600,11 +2698,12 @@
                 <div class="service-row service-row-header">
                     <div>Email</div>
                     <div>Role</div>
-                    <div>Joined</div>
+                    <div>Status</div>
                     <div></div>
                 </div>
             `;
 
+            // Active users
             usersSnapshot.forEach((userDoc) => {
                 const userData = userDoc.data();
                 const isCurrentUser = userDoc.id === window.currentUser.uid;
@@ -2614,7 +2713,7 @@
                     <div class="service-row">
                         <div>${userData.email}${isCurrentUser ? ' <span style="color: var(--primary); font-size: 12px;">(You)</span>' : ''}</div>
                         <div><span style="text-transform: capitalize; padding: 4px 8px; background: ${userData.role === 'admin' ? 'var(--primary)' : 'var(--text-secondary)'}; color: white; border-radius: 4px; font-size: 12px;">${userData.role}</span></div>
-                        <div>${joinedDate}</div>
+                        <div><span style="color: #10b981; font-weight: 500;">Active</span></div>
                         <div style="display: flex; gap: 8px; justify-content: flex-end;">
                             ${isAdmin && !isCurrentUser ? `<button class="btn btn-danger btn-sm" onclick="removeTeamMember('${userDoc.id}', '${userData.email}')">Remove</button>` : ''}
                             ${isAdmin && isCurrentUser ? `<button class="btn btn-secondary btn-sm" onclick="showTransferAdminModal()">Transfer Admin</button>` : ''}
@@ -2623,7 +2722,36 @@
                 `;
             });
 
+            // Pending invitations
+            invitationsSnapshot.forEach((inviteDoc) => {
+                const inviteData = inviteDoc.data();
+                const expiresDate = new Date(inviteData.expiresAt).toLocaleDateString();
+                
+                html += `
+                    <div class="service-row" style="opacity: 0.7;">
+                        <div>${inviteData.email}</div>
+                        <div><span style="padding: 4px 8px; background: #f59e0b; color: white; border-radius: 4px; font-size: 12px;">Invited</span></div>
+                        <div><span style="color: #f59e0b;">Pending (expires ${expiresDate})</span></div>
+                        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                            ${isAdmin ? `<button class="btn btn-danger btn-sm" onclick="cancelInvitation('${inviteDoc.id}', '${inviteData.email}')">Cancel</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
             teamList.innerHTML = html;
+        }
+
+        async function cancelInvitation(invitationId, email) {
+            if (!confirm(`Cancel invitation for ${email}?`)) return;
+
+            try {
+                await deleteDoc(doc(db, 'invitations', invitationId));
+                alert('✓ Invitation cancelled');
+                await loadTeamMembers();
+            } catch (error) {
+                alert('Error cancelling invitation: ' + error.message);
+            }
         }
 
         function showInviteModal() {
@@ -2683,7 +2811,7 @@
                 const businessData = (await getDoc(doc(db, 'businesses', window.businessId))).data();
                 const businessName = businessData?.businessName || 'the team';
                 
-                await fetch('https://elijahchristo.app.n8n.cloud/webhook-test/team-invitation', {
+                const webhookResponse = await fetch('https://elijahchristo.app.n8n.cloud/webhook/team-invitation', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -2696,8 +2824,13 @@
                     })
                 });
 
+                if (!webhookResponse.ok) {
+                    throw new Error('Email webhook failed: ' + webhookResponse.status);
+                }
+
                 alert('✓ Invitation sent to ' + email);
                 closeInviteModal();
+                await loadTeamMembers(); // Reload to show pending invitation
             } catch (error) {
                 console.error('Error sending invitation:', error);
                 errorDiv.textContent = 'Error sending invitation: ' + error.message;
@@ -2926,6 +3059,7 @@
         window.showTransferAdminModal = showTransferAdminModal;
         window.closeTransferAdminModal = closeTransferAdminModal;
         window.confirmTransferAdmin = confirmTransferAdmin;
+        window.cancelInvitation = cancelInvitation;
 
         // Import storage functions for global use
         window.storageRef = ref;
