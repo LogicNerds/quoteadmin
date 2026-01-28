@@ -664,6 +664,33 @@
             white-space: nowrap;
         }
 
+        /* Team Members Table */
+        .team-members-row {
+            display: grid;
+            grid-template-columns: 2fr 150px 180px 200px;
+            gap: 16px;
+            align-items: center;
+            padding: 14px 16px;
+            background: var(--bg-card);
+        }
+
+        .team-members-row:hover {
+            background: var(--bg-main);
+        }
+
+        .team-members-row-header {
+            background: var(--bg-main);
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .team-members-row-header:hover {
+            background: var(--bg-main);
+        }
+
         /* Empty State */
         .empty-state {
             text-align: center;
@@ -968,21 +995,90 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding-bottom: 70px; /* Make room for bottom nav */
+            }
+
             .sidebar {
-                position: static;
+                position: fixed;
+                bottom: 0;
+                left: 0;
                 width: 100%;
                 height: auto;
                 border-right: none;
-                border-bottom: 1px solid var(--border);
+                border-top: 1px solid var(--border);
+                padding: 0;
+                z-index: 1000;
+                background: var(--bg-card);
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            }
+
+            .sidebar-header {
+                display: none;
+            }
+
+            .sidebar nav {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                padding: 0;
+            }
+
+            .nav-item {
+                flex: 1;
+                text-align: center;
+                padding: 12px 8px;
+                margin: 0;
+                font-size: 11px;
+                border-radius: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .nav-item .nav-icon {
+                font-size: 20px;
+                margin: 0;
+            }
+
+            .nav-item:last-child {
+                display: none; /* Hide logout from bottom nav */
             }
 
             .main-content {
                 margin-left: 0;
-                padding: 20px;
+                padding: 16px;
+                padding-bottom: 80px; /* Extra padding for bottom nav */
             }
 
             .stats-grid {
                 grid-template-columns: 1fr;
+            }
+
+            /* Team members mobile layout */
+            .team-members-row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                padding: 12px;
+            }
+
+            .team-members-row-header {
+                display: none;
+            }
+
+            .team-members-row > div:first-child {
+                font-weight: 600;
+                font-size: 14px;
+            }
+
+            .team-members-row > div:nth-child(2),
+            .team-members-row > div:nth-child(3) {
+                font-size: 13px;
+            }
+
+            .team-members-row > div:last-child {
+                margin-top: 8px;
             }
         }
     </style>
@@ -2695,7 +2791,7 @@
             }
 
             let html = `
-                <div class="service-row service-row-header">
+                <div class="team-members-row team-members-row-header">
                     <div>Email</div>
                     <div>Role</div>
                     <div>Status</div>
@@ -2710,7 +2806,7 @@
                 const joinedDate = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString() : 'N/A';
                 
                 html += `
-                    <div class="service-row">
+                    <div class="team-members-row">
                         <div>${userData.email}${isCurrentUser ? ' <span style="color: var(--primary); font-size: 12px;">(You)</span>' : ''}</div>
                         <div><span style="text-transform: capitalize; padding: 4px 8px; background: ${userData.role === 'admin' ? 'var(--primary)' : 'var(--text-secondary)'}; color: white; border-radius: 4px; font-size: 12px;">${userData.role}</span></div>
                         <div><span style="color: #10b981; font-weight: 500;">Active</span></div>
@@ -2728,7 +2824,7 @@
                 const expiresDate = new Date(inviteData.expiresAt).toLocaleDateString();
                 
                 html += `
-                    <div class="service-row" style="opacity: 0.7;">
+                    <div class="team-members-row" style="opacity: 0.7;">
                         <div>${inviteData.email}</div>
                         <div><span style="padding: 4px 8px; background: #f59e0b; color: white; border-radius: 4px; font-size: 12px;">Invited</span></div>
                         <div><span style="color: #f59e0b;">Pending (expires ${expiresDate})</span></div>
