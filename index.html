@@ -610,7 +610,7 @@
 
         .service-row {
             display: grid;
-            grid-template-columns: 50px 2fr 120px 120px 3fr 100px;
+            grid-template-columns: 30px 50px 2fr 120px 120px 3fr 100px;
             gap: 12px;
             align-items: center;
             padding: 14px 16px;
@@ -2154,7 +2154,7 @@
                 services.push({ id: doc.id, ...doc.data() });
             });
 
-            // Apply sorting if set
+            // Sort by order field first (if exists), then by other criteria
             if (window.serviceSortColumn) {
                 services.sort((a, b) => {
                     let aVal, bVal;
@@ -2186,6 +2186,15 @@
                     if (aVal > bVal) return window.serviceSortDirection === 'asc' ? 1 : -1;
                     return 0;
                 });
+            } else {
+                // Default: sort by order field (or createdAt if no order)
+                services.sort((a, b) => {
+                    const orderA = a.order !== undefined ? a.order : 999999;
+                    const orderB = b.order !== undefined ? b.order : 999999;
+                    if (orderA !== orderB) return orderA - orderB;
+                    // If same order, sort by createdAt
+                    return new Date(a.createdAt) - new Date(b.createdAt);
+                });
             }
 
             // Create header row with sortable columns
@@ -2198,6 +2207,7 @@
 
             let html = `
                 <div class="service-row service-row-header">
+                    <div>⋮⋮</div>
                     <div style="cursor: pointer;" onclick="sortServices('active')">Active${sortArrow('active')}</div>
                     <div style="cursor: pointer;" onclick="sortServices('name')">Name${sortArrow('name')}</div>
                     <div style="cursor: pointer;" onclick="sortServices('price')">Price${sortArrow('price')}</div>
@@ -2214,11 +2224,12 @@
                 custom: 'Custom'
             };
 
-            services.forEach((service) => {
+            services.forEach((service, index) => {
                 const isActive = service.active !== false;
                 
                 html += `
-                    <div class="service-row">
+                    <div class="service-row" draggable="true" data-service-id="${service.id}" data-order="${index}">
+                        <div class="drag-handle" style="cursor: grab; font-size: 18px; color: var(--text-secondary);">⋮⋮</div>
                         <div>
                             <input 
                                 type="checkbox" 
@@ -2240,6 +2251,75 @@
             });
 
             servicesList.innerHTML = html;
+            
+            // Add drag and drop functionality
+            initializeDragAndDrop();
+        }
+
+        function initializeDragAndDrop() {
+            const rows = document.querySelectorAll('.service-row[draggable="true"]');
+            let draggedElement = null;
+
+            rows.forEach(row => {
+                row.addEventListener('dragstart', (e) => {
+                    draggedElement = row;
+                    row.style.opacity = '0.5';
+                });
+
+                row.addEventListener('dragend', (e) => {
+                    row.style.opacity = '1';
+                });
+
+                row.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    const afterElement = getDragAfterElement(row.parentElement, e.clientY);
+                    if (afterElement == null) {
+                        row.parentElement.appendChild(draggedElement);
+                    } else {
+                        row.parentElement.insertBefore(draggedElement, afterElement);
+                    }
+                });
+
+                row.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    await saveServiceOrder();
+                });
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.service-row[draggable="true"]:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        async function saveServiceOrder() {
+            const rows = document.querySelectorAll('.service-row[draggable="true"]');
+            const updates = [];
+
+            rows.forEach((row, index) => {
+                const serviceId = row.getAttribute('data-service-id');
+                updates.push(
+                    setDoc(doc(db, 'services', serviceId), { order: index }, { merge: true })
+                );
+            });
+
+            try {
+                await Promise.all(updates);
+                console.log('Order saved');
+            } catch (error) {
+                console.error('Error saving order:', error);
+                alert('Error saving order');
+            }
         }
 
         function sortServices(column) {
@@ -3147,6 +3227,8 @@
         window.toggleEditUnitTypeField = toggleEditUnitTypeField;
         window.toggleBulkUnitType = toggleBulkUnitType;
         window.sortServices = sortServices;
+        window.initializeDragAndDrop = initializeDragAndDrop;
+        window.saveServiceOrder = saveServiceOrder;
         window.loadTeamMembers = loadTeamMembers;
         window.showInviteModal = showInviteModal;
         window.closeInviteModal = closeInviteModal;
