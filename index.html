@@ -1150,18 +1150,29 @@
                 border-radius: 0;
             }
 
-            /* Footer positioning for mobile - above bottom nav */
-            body > div[style*="position: fixed"][style*="bottom: 0"] {
-                left: 0 !important;
-                bottom: 70px !important; /* Above bottom nav */
-                padding: 8px 16px !important;
-                font-size: 12px !important;
+            /* Remove bottom padding from body to make room for footer */
+            body {
+                padding-bottom: 140px !important; /* Room for nav (70px) + footer (35px) */
             }
 
-            /* Disclaimer drawer for mobile */
+            /* Footer at very bottom - below bottom nav */
+            body > div:nth-last-child(2) {
+                left: 0 !important;
+                bottom: 0 !important;
+                padding: 8px 16px !important;
+                font-size: 11px !important;
+                z-index: 999 !important;
+            }
+
+            /* Bottom nav above footer */
+            .sidebar {
+                bottom: 35px !important; /* Height of footer */
+            }
+
+            /* Disclaimer drawer above everything */
             #disclaimerDrawer {
                 left: 0 !important;
-                bottom: 70px !important; /* Above bottom nav */
+                bottom: 105px !important; /* Above nav + footer */
                 padding: 16px !important;
                 max-height: 50vh !important;
             }
