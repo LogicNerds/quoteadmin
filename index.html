@@ -1025,7 +1025,7 @@
             }
 
             .nav-item {
-                flex: 1;
+                flex: 0 0 auto; /* Don't grow, natural size */
                 text-align: center;
                 padding: 12px 8px;
                 margin: 0;
@@ -1234,23 +1234,30 @@
                 z-index: 1000 !important;
             }
 
-            /* Fix nav layout - My Business left, My Quotes right */
+            /* Fix nav layout - side by side */
             .sidebar nav {
                 display: flex !important;
+                flex-direction: row !important;
                 justify-content: space-between !important;
+                align-items: center !important;
                 padding: 0 20px !important;
+                width: 100% !important;
             }
 
-            .nav-item:nth-child(1) {
-                order: 1; /* My Business left */
+            /* Hide specific nav items on mobile */
+            .nav-mobile-hide {
+                display: none !important;
             }
 
-            .nav-item:nth-child(4) {
-                order: 2; /* My Quotes right */
+            /* Show only these two on mobile */
+            .nav-mobile-show {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
             }
 
             /* Hide logout from bottom nav */
-            .sidebar nav .nav-item:last-child {
+            .nav-logout {
                 display: none !important;
             }
         }
@@ -1294,25 +1301,25 @@
                     <div class="business-name" id="sidebarBusinessName">Loading...</div>
                 </div>
                 <nav class="sidebar-nav">
-                    <div class="nav-item active" onclick="showSection('settings')">
+                    <div class="nav-item nav-mobile-show active" onclick="showSection('settings')">
                         <span class="nav-icon">⚙</span>
                         My Business
                     </div>
-                    <div class="nav-item" onclick="showSection('services')">
+                    <div class="nav-item nav-mobile-hide" onclick="showSection('services')">
                         <span class="nav-icon">◆</span>
                         My Products & Services
                     </div>
-                    <div class="nav-item" onclick="showSection('quotepage')">
+                    <div class="nav-item nav-mobile-hide" onclick="showSection('quotepage')">
                         <span class="nav-icon">◉</span>
                         My Quote Page
                     </div>
-                    <div class="nav-item" onclick="showSection('quotes')">
+                    <div class="nav-item nav-mobile-show" onclick="showSection('quotes')">
                         <span class="nav-icon">📋</span>
                         My Quotes <span id="quotesBadge" class="nav-badge hidden">0</span>
                     </div>
                 </nav>
                 <div style="flex: 1;"></div>
-                <div class="nav-item" onclick="logout()" style="margin: 0 0 24px 0; color: var(--danger);">
+                <div class="nav-item nav-logout" onclick="logout()" style="margin: 0 0 24px 0; color: var(--danger);">
                     <span class="nav-icon">→</span>
                     Logout
                 </div>
