@@ -1150,54 +1150,93 @@
                 border-radius: 0;
             }
 
-            /* Hide footer and show only when adminPanel is visible */
+            /* Main content with proper padding to prevent nav scroll */
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+                padding-bottom: 140px !important; /* Nav (70px) + Disclaimer (35px) + buffer */
+                min-height: calc(100vh - 140px) !important;
+            }
+
+            /* Show mobile logout button */
+            #mobileLogoutBtn {
+                display: block !important;
+            }
+
+            /* Hide desktop footer on mobile */
             #appFooter {
                 display: none !important;
             }
 
-            #adminPanel:not(.hidden) ~ #appFooter {
-                display: block !important;
-                position: fixed !important;
-                bottom: 70px !important; /* Above nav */
-                left: 0 !important;
-                right: 0 !important;
-                width: 100% !important;
-                padding: 8px 16px !important;
-                text-align: center !important;
-                font-size: 11px !important;
-                z-index: 998 !important;
-            }
-
-            /* Hide copyright on mobile, center disclaimer link */
-            #appFooter > div:first-child {
-                display: none !important;
-            }
-
-            #appFooter > a {
-                display: block !important;
-                width: 100% !important;
-            }
-
-            /* Disclaimer drawer at absolute bottom when open */
+            /* DISCLAIMER - Always visible at absolute bottom as a bar */
             #disclaimerDrawer {
                 position: fixed !important;
                 bottom: 0 !important;
                 left: 0 !important;
                 right: 0 !important;
                 width: 100% !important;
-                padding: 16px !important;
-                max-height: 70vh !important;
+                padding: 8px 16px !important;
+                font-size: 10px !important;
+                text-align: center !important;
+                height: 35px !important;
+                max-height: 35px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
                 z-index: 1001 !important;
+                box-shadow: none !important;
+                border-top: 1px solid var(--border) !important;
+                overflow: hidden !important;
             }
 
-            /* Bottom nav - at very bottom */
+            /* Hide the full drawer content, show only summary */
+            #disclaimerDrawer > div {
+                display: none !important;
+            }
+
+            /* Always show as closed bar */
+            #disclaimerDrawer.hidden::before {
+                content: '© 2026 Logic Nerds • ';
+                color: var(--text-secondary);
+            }
+
+            #disclaimerDrawer.hidden::after {
+                content: 'Tap for Disclaimer';
+                color: var(--primary);
+                cursor: pointer;
+                text-decoration: underline;
+            }
+
+            /* When opened, show full content */
+            #disclaimerDrawer:not(.hidden) {
+                max-height: 70vh !important;
+                height: auto !important;
+                padding: 16px !important;
+                overflow-y: auto !important;
+            }
+
+            #disclaimerDrawer:not(.hidden)::before,
+            #disclaimerDrawer:not(.hidden)::after {
+                content: none !important;
+            }
+
+            #disclaimerDrawer:not(.hidden) > div {
+                display: block !important;
+            }
+
+            /* BOTTOM NAV - Above disclaimer */
             .sidebar {
                 position: fixed !important;
-                bottom: 0 !important;
+                bottom: 35px !important; /* Height of disclaimer bar */
                 left: 0 !important;
                 width: 100% !important;
                 height: 70px !important;
-                z-index: 999 !important;
+                z-index: 1000 !important;
+            }
+
+            /* Hide logout from bottom nav */
+            .sidebar nav .nav-item:last-child {
+                display: none !important;
             }
         }
     </style>
@@ -1273,6 +1312,7 @@
                             <h1 class="page-title">My Business</h1>
                             <p class="page-subtitle">Configure your company information and branding</p>
                         </div>
+                        <button id="mobileLogoutBtn" onclick="logout()" style="display: none; padding: 8px 16px; background: var(--danger); color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer;">Logout</button>
                     </div>
 
                     <div class="card">
