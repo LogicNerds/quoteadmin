@@ -1150,31 +1150,59 @@
                 border-radius: 0;
             }
 
-            /* Remove bottom padding from body to make room for footer */
-            body {
-                padding-bottom: 140px !important; /* Room for nav (70px) + footer (35px) */
+            /* Content padding to avoid overlap with fixed bottom elements */
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+                padding-bottom: 160px !important; /* Space for nav + footer + breathing room */
             }
 
-            /* Footer at very bottom - below bottom nav */
+            /* FOOTER - Above nav, full width */
             body > div:nth-last-child(2) {
+                position: fixed !important;
+                bottom: 70px !important; /* Height of nav */
                 left: 0 !important;
-                bottom: 0 !important;
-                padding: 8px 16px !important;
+                right: 0 !important;
+                width: 100% !important;
+                padding: 10px 16px !important;
+                margin: 0 !important;
+                text-align: center !important;
                 font-size: 11px !important;
+                z-index: 998 !important;
+                display: block !important;
+            }
+
+            /* Center the disclaimer link in footer */
+            body > div:nth-last-child(2) > div:first-child {
+                display: none; /* Hide copyright on mobile to save space */
+            }
+
+            body > div:nth-last-child(2) > a {
+                display: block !important;
+                width: 100% !important;
+                text-align: center !important;
+            }
+
+            /* BOTTOM NAV - at very bottom, full width */
+            .sidebar {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 70px !important;
                 z-index: 999 !important;
             }
 
-            /* Bottom nav above footer */
-            .sidebar {
-                bottom: 35px !important; /* Height of footer */
-            }
-
-            /* Disclaimer drawer above everything */
+            /* DISCLAIMER DRAWER - at absolute bottom, full width */
             #disclaimerDrawer {
+                position: fixed !important;
+                bottom: 0 !important;
                 left: 0 !important;
-                bottom: 105px !important; /* Above nav + footer */
+                right: 0 !important;
+                width: 100% !important;
                 padding: 16px !important;
-                max-height: 50vh !important;
+                max-height: 60vh !important;
+                z-index: 1000 !important; /* Above everything */
             }
         }
     </style>
