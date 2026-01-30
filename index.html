@@ -1150,50 +1150,35 @@
                 border-radius: 0;
             }
 
-            /* Content padding to avoid overlap with fixed bottom elements */
-            .main-content {
-                margin-left: 0;
-                padding: 16px;
-                padding-bottom: 160px !important; /* Space for nav + footer + breathing room */
+            /* Hide footer and show only when adminPanel is visible */
+            #appFooter {
+                display: none !important;
             }
 
-            /* FOOTER - Above nav, full width */
-            body > div:nth-last-child(2) {
+            #adminPanel:not(.hidden) ~ #appFooter {
+                display: block !important;
                 position: fixed !important;
-                bottom: 70px !important; /* Height of nav */
+                bottom: 70px !important; /* Above nav */
                 left: 0 !important;
                 right: 0 !important;
                 width: 100% !important;
-                padding: 10px 16px !important;
-                margin: 0 !important;
+                padding: 8px 16px !important;
                 text-align: center !important;
                 font-size: 11px !important;
                 z-index: 998 !important;
-                display: block !important;
             }
 
-            /* Center the disclaimer link in footer */
-            body > div:nth-last-child(2) > div:first-child {
-                display: none; /* Hide copyright on mobile to save space */
+            /* Hide copyright on mobile, center disclaimer link */
+            #appFooter > div:first-child {
+                display: none !important;
             }
 
-            body > div:nth-last-child(2) > a {
+            #appFooter > a {
                 display: block !important;
                 width: 100% !important;
-                text-align: center !important;
             }
 
-            /* BOTTOM NAV - at very bottom, full width */
-            .sidebar {
-                position: fixed !important;
-                bottom: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: 70px !important;
-                z-index: 999 !important;
-            }
-
-            /* DISCLAIMER DRAWER - at absolute bottom, full width */
+            /* Disclaimer drawer at absolute bottom when open */
             #disclaimerDrawer {
                 position: fixed !important;
                 bottom: 0 !important;
@@ -1201,8 +1186,18 @@
                 right: 0 !important;
                 width: 100% !important;
                 padding: 16px !important;
-                max-height: 60vh !important;
-                z-index: 1000 !important; /* Above everything */
+                max-height: 70vh !important;
+                z-index: 1001 !important;
+            }
+
+            /* Bottom nav - at very bottom */
+            .sidebar {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 70px !important;
+                z-index: 999 !important;
             }
         }
     </style>
@@ -1709,49 +1704,49 @@
                     </div>
                 </div>
             </main>
-            
-            <!-- Footer -->
-            <div style="position: fixed; bottom: 0; left: var(--sidebar-width); right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-secondary); z-index: 100;">
-                <div>© 2026 Logic Nerds. All rights reserved.</div>
-                <a href="#" onclick="toggleDisclaimerDrawer(); return false;" style="color: var(--primary); text-decoration: none;">Disclaimer</a>
-            </div>
+        </div>
+    </div>
 
-            <!-- Disclaimer Drawer -->
-            <div id="disclaimerDrawer" class="hidden" style="position: fixed; bottom: 0; left: var(--sidebar-width); right: 0; background: var(--bg-card); border-top: 2px solid var(--border); padding: 24px; max-height: 60vh; overflow-y: auto; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); z-index: 99;">
-                <div style="max-width: 800px; margin: 0 auto;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                        <h3 style="font-size: 18px; font-weight: 600;">Legal Disclaimer</h3>
-                        <button onclick="toggleDisclaimerDrawer()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary);">×</button>
-                    </div>
-                    <div style="line-height: 1.8; color: var(--text-secondary); font-size: 14px;">
-                        <p style="margin-bottom: 12px;"><strong>IMPORTANT: PLEASE READ CAREFULLY</strong></p>
-                        
-                        <p style="margin-bottom: 12px;">This quote calculator tool ("Service") is provided by Logic Nerds for informational purposes only. By using this Service, you acknowledge and agree to the following:</p>
-                        
-                        <p style="margin-bottom: 12px;"><strong>1. Estimates Only</strong><br>
-                        All quotes generated are estimates based on information provided by the customer. Actual prices may vary based on the scope of work, unforeseen circumstances, site conditions, material costs, or other factors discovered during service delivery.</p>
-                        
-                        <p style="margin-bottom: 12px;"><strong>2. No Liability for Pricing Errors</strong><br>
-                        Logic Nerds is not responsible for any financial losses, damages, or disputes arising from incorrect pricing, customer-provided information, miscalculations, or discrepancies between quoted and actual prices. Users of this Service accept full responsibility for verifying quote accuracy before providing them to customers.</p>
-                        
-                        <p style="margin-bottom: 12px;"><strong>3. Customer-Provided Information</strong><br>
-                        Quotes are generated based solely on information entered by the customer. Logic Nerds is not liable for inaccurate, incomplete, or misleading information provided by customers that may result in quotes that do not reflect actual job requirements or costs.</p>
-                        
-                        <p style="margin-bottom: 12px;"><strong>4. No Guarantees</strong><br>
-                        Logic Nerds makes no warranties or guarantees regarding the accuracy, reliability, or completeness of quotes generated through this Service. The Service is provided "as is" without any express or implied warranties.</p>
-                        
-                        <p style="margin-bottom: 12px;"><strong>5. Business Owner Responsibility</strong><br>
-                        Business owners using this Service are solely responsible for: (a) verifying all quote accuracy before presenting to customers, (b) honoring or adjusting quotes as appropriate, (c) complying with all applicable laws and regulations, and (d) managing all customer relationships and expectations.</p>
-                        
-                        <p style="margin-bottom: 12px;"><strong>6. Limitation of Liability</strong><br>
-                        To the maximum extent permitted by law, Logic Nerds shall not be liable for any direct, indirect, incidental, special, consequential, or punitive damages arising from use of this Service, including but not limited to loss of profits, revenue, data, or business opportunities.</p>
-                        
-                        <p style="margin-bottom: 12px;"><strong>7. Indemnification</strong><br>
-                        You agree to indemnify and hold harmless Logic Nerds from any claims, damages, losses, or expenses (including attorney fees) arising from your use of this Service or any disputes with your customers regarding quotes generated.</p>
-                        
-                        <p style="margin-bottom: 12px;">By continuing to use this Service, you acknowledge that you have read, understood, and agree to be bound by this disclaimer.</p>
-                    </div>
-                </div>
+    <!-- Footer (outside adminPanel for proper mobile stacking) -->
+    <div id="appFooter" style="position: fixed; bottom: 0; left: var(--sidebar-width); right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-secondary); z-index: 100;">
+        <div>© 2026 Logic Nerds. All rights reserved.</div>
+        <a href="#" onclick="toggleDisclaimerDrawer(); return false;" style="color: var(--primary); text-decoration: none;">Disclaimer</a>
+    </div>
+
+    <!-- Disclaimer Drawer (outside adminPanel for proper mobile stacking) -->
+    <div id="disclaimerDrawer" class="hidden" style="position: fixed; bottom: 0; left: var(--sidebar-width); right: 0; background: var(--bg-card); border-top: 2px solid var(--border); padding: 24px; max-height: 60vh; overflow-y: auto; box-shadow: 0 -4px 12px rgba(0,0,0,0.1); z-index: 101;">
+        <div style="max-width: 800px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="font-size: 18px; font-weight: 600;">Legal Disclaimer</h3>
+                <button onclick="toggleDisclaimerDrawer()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-secondary);">×</button>
+            </div>
+            <div style="line-height: 1.8; color: var(--text-secondary); font-size: 14px;">
+                <p style="margin-bottom: 12px;"><strong>IMPORTANT: PLEASE READ CAREFULLY</strong></p>
+                
+                <p style="margin-bottom: 12px;">This quote calculator tool ("Service") is provided by Logic Nerds for informational purposes only. By using this Service, you acknowledge and agree to the following:</p>
+                
+                <p style="margin-bottom: 12px;"><strong>1. Estimates Only</strong><br>
+                All quotes generated are estimates based on information provided by the customer. Actual prices may vary based on the scope of work, unforeseen circumstances, site conditions, material costs, or other factors discovered during service delivery.</p>
+                
+                <p style="margin-bottom: 12px;"><strong>2. No Liability for Pricing Errors</strong><br>
+                Logic Nerds is not responsible for any financial losses, damages, or disputes arising from incorrect pricing, customer-provided information, miscalculations, or discrepancies between quoted and actual prices. Users of this Service accept full responsibility for verifying quote accuracy before providing them to customers.</p>
+                
+                <p style="margin-bottom: 12px;"><strong>3. Customer-Provided Information</strong><br>
+                Quotes are generated based solely on information entered by the customer. Logic Nerds is not liable for inaccurate, incomplete, or misleading information provided by customers that may result in quotes that do not reflect actual job requirements or costs.</p>
+                
+                <p style="margin-bottom: 12px;"><strong>4. No Guarantees</strong><br>
+                Logic Nerds makes no warranties or guarantees regarding the accuracy, reliability, or completeness of quotes generated through this Service. The Service is provided "as is" without any express or implied warranties.</p>
+                
+                <p style="margin-bottom: 12px;"><strong>5. Business Owner Responsibility</strong><br>
+                Business owners using this Service are solely responsible for: (a) verifying all quote accuracy before presenting to customers, (b) honoring or adjusting quotes as appropriate, (c) complying with all applicable laws and regulations, and (d) managing all customer relationships and expectations.</p>
+                
+                <p style="margin-bottom: 12px;"><strong>6. Limitation of Liability</strong><br>
+                To the maximum extent permitted by law, Logic Nerds shall not be liable for any direct, indirect, incidental, special, consequential, or punitive damages arising from use of this Service, including but not limited to loss of profits, revenue, data, or business opportunities.</p>
+                
+                <p style="margin-bottom: 12px;"><strong>7. Indemnification</strong><br>
+                You agree to indemnify and hold harmless Logic Nerds from any claims, damages, losses, or expenses (including attorney fees) arising from your use of this Service or any disputes with your customers regarding quotes generated.</p>
+                
+                <p style="margin-bottom: 12px;">By continuing to use this Service, you acknowledge that you have read, understood, and agree to be bound by this disclaimer.</p>
             </div>
         </div>
     </div>
