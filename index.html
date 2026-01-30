@@ -1048,6 +1048,12 @@
                 display: none !important;
             }
 
+            /* Keep My Business (1) and My Quotes (4) visible */
+            .nav-item:nth-child(1),
+            .nav-item:nth-child(4) {
+                display: flex !important;
+            }
+
             .nav-item:last-child {
                 display: none; /* Hide logout from bottom nav */
             }
@@ -1142,6 +1148,22 @@
                 max-height: 100vh;
                 margin: 0;
                 border-radius: 0;
+            }
+
+            /* Footer positioning for mobile - above bottom nav */
+            body > div[style*="position: fixed"][style*="bottom: 0"] {
+                left: 0 !important;
+                bottom: 70px !important; /* Above bottom nav */
+                padding: 8px 16px !important;
+                font-size: 12px !important;
+            }
+
+            /* Disclaimer drawer for mobile */
+            #disclaimerDrawer {
+                left: 0 !important;
+                bottom: 70px !important; /* Above bottom nav */
+                padding: 16px !important;
+                max-height: 50vh !important;
             }
         }
     </style>
