@@ -1234,13 +1234,13 @@
                 z-index: 1000 !important;
             }
 
-            /* Fix nav layout - side by side */
+            /* Fix nav layout - side by side, 50% each */
             .sidebar nav {
                 display: flex !important;
                 flex-direction: row !important;
-                justify-content: space-between !important;
+                justify-content: stretch !important;
                 align-items: center !important;
-                padding: 0 20px !important;
+                padding: 0 !important;
                 width: 100% !important;
             }
 
@@ -1249,15 +1249,23 @@
                 display: none !important;
             }
 
-            /* Show only these two on mobile */
+            /* Show only these two on mobile - 50% width each */
             .nav-mobile-show {
                 display: flex !important;
+                flex: 1 1 50% !important;
                 flex-direction: column !important;
                 align-items: center !important;
+                justify-content: center !important;
+                width: 50% !important;
             }
 
-            /* Hide logout from bottom nav */
+            /* Hide logout from bottom nav completely */
             .nav-logout {
+                display: none !important;
+            }
+
+            /* Remove the flex spacer div on mobile */
+            .sidebar > div[style*="flex: 1"] {
                 display: none !important;
             }
         }
