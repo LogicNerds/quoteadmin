@@ -1163,6 +1163,11 @@
                 display: block !important;
             }
 
+            /* Hide import/export on mobile */
+            #importExportLinks {
+                display: none !important;
+            }
+
             /* Hide desktop footer on mobile */
             #appFooter {
                 display: none !important;
@@ -1435,7 +1440,7 @@
                     </div>
 
                     <!-- Import/Export Links -->
-                    <div style="text-align: right; margin-top: 24px; padding-right: 8px;">
+                    <div id="importExportLinks" style="text-align: right; margin-top: 32px; margin-bottom: 40px; padding-right: 8px;">
                         <a href="#" onclick="importSetup(); return false;" style="color: var(--text-secondary); font-size: 13px; text-decoration: none; margin-right: 16px;">Import</a>
                         <a href="#" onclick="exportSetup(); return false;" style="color: var(--text-secondary); font-size: 13px; text-decoration: none;">Export</a>
                     </div>
