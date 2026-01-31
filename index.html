@@ -1433,7 +1433,16 @@
 
                         <div id="teamMembersList"></div>
                     </div>
+
+                    <!-- Import/Export Links -->
+                    <div style="text-align: right; margin-top: 24px; padding-right: 8px;">
+                        <a href="#" onclick="importSetup(); return false;" style="color: var(--text-secondary); font-size: 13px; text-decoration: none; margin-right: 16px;">Import</a>
+                        <a href="#" onclick="exportSetup(); return false;" style="color: var(--text-secondary); font-size: 13px; text-decoration: none;">Export</a>
+                    </div>
                 </div>
+
+                <!-- Hidden file input for import -->
+                <input type="file" id="importFileInput" accept=".json" style="display: none;">
 
                 <!-- Services Section -->
                 <div id="servicesSection" class="hidden">
@@ -3019,6 +3028,142 @@
             drawer.classList.toggle('hidden');
         }
 
+        // Export setup configuration
+        async function exportSetup() {
+            if (!window.businessId) {
+                alert('Please log in first');
+                return;
+            }
+
+            try {
+                // Get business data
+                const businessDoc = await getDoc(doc(db, 'businesses', window.businessId));
+                if (!businessDoc.exists()) {
+                    alert('No business data found');
+                    return;
+                }
+                const businessData = businessDoc.data();
+
+                // Get all services
+                const servicesQuery = query(collection(db, 'services'), where('businessId', '==', window.businessId));
+                const servicesSnapshot = await getDocs(servicesQuery);
+                
+                const services = [];
+                servicesSnapshot.forEach((doc) => {
+                    const serviceData = doc.data();
+                    // Remove fields that shouldn't be exported
+                    delete serviceData.businessId;
+                    delete serviceData.createdAt;
+                    services.push(serviceData);
+                });
+
+                // Create export object
+                const exportData = {
+                    version: '1.0',
+                    exportedAt: new Date().toISOString(),
+                    business: {
+                        businessName: businessData.businessName || '',
+                        contactEmail: businessData.contactEmail || '',
+                        businessPhone: businessData.businessPhone || '',
+                        logoUrl: businessData.logoUrl || '',
+                        primaryColor: businessData.primaryColor || '#667eea',
+                        secondaryColor: businessData.secondaryColor || '#764ba2',
+                        landingHeadline: businessData.landingHeadline || '',
+                        landingMessage: businessData.landingMessage || '',
+                        servicesDisclaimer: businessData.servicesDisclaimer || '',
+                        landingTextColor: businessData.landingTextColor || '#1f2937'
+                    },
+                    services: services
+                };
+
+                // Create filename
+                const filename = `${businessData.businessName || 'business'}-setup.json`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+                // Download JSON file
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                alert('✓ Setup exported successfully!');
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('Error exporting setup: ' + error.message);
+            }
+        }
+
+        // Import setup configuration
+        function importSetup() {
+            const fileInput = document.getElementById('importFileInput');
+            
+            // Set up file change handler
+            fileInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                try {
+                    // Read file
+                    const text = await file.text();
+                    const importData = JSON.parse(text);
+
+                    // Validate version
+                    if (!importData.version || importData.version !== '1.0') {
+                        alert('Invalid or incompatible setup file');
+                        return;
+                    }
+
+                    // Confirm import
+                    const serviceCount = importData.services?.length || 0;
+                    const businessName = importData.business?.businessName || 'this setup';
+                    
+                    if (!confirm(`Import setup for "${businessName}"?\n\nThis will:\n- Update business settings\n- Add ${serviceCount} products/services\n\nContinue?`)) {
+                        return;
+                    }
+
+                    // Import business settings
+                    await setDoc(doc(db, 'businesses', window.businessId), {
+                        ...importData.business,
+                        updatedAt: new Date().toISOString()
+                    }, { merge: true });
+
+                    // Import services (add to existing)
+                    let importedCount = 0;
+                    if (importData.services && importData.services.length > 0) {
+                        for (const service of importData.services) {
+                            await addDoc(collection(db, 'services'), {
+                                ...service,
+                                businessId: window.businessId,
+                                createdAt: new Date().toISOString()
+                            });
+                            importedCount++;
+                        }
+                    }
+
+                    // Clear file input
+                    fileInput.value = '';
+
+                    // Reload data
+                    await loadBusinessData();
+                    if (typeof loadServices === 'function') {
+                        await loadServices();
+                    }
+
+                    alert(`✓ Setup imported successfully!\n\nBusiness settings updated\n${importedCount} products/services added`);
+                } catch (error) {
+                    console.error('Import error:', error);
+                    alert('Error importing setup: ' + error.message);
+                }
+            };
+
+            // Trigger file picker
+            fileInput.click();
+        }
+
         function showSetupGuide() {
             document.getElementById('setupGuideModal').classList.remove('hidden');
         }
@@ -3427,6 +3572,8 @@
         window.closeTransferAdminModal = closeTransferAdminModal;
         window.confirmTransferAdmin = confirmTransferAdmin;
         window.cancelInvitation = cancelInvitation;
+        window.exportSetup = exportSetup;
+        window.importSetup = importSetup;
 
         // Import storage functions for global use
         window.storageRef = ref;
