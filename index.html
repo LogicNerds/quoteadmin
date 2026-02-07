@@ -1901,14 +1901,25 @@
                     window.currentUserData = userDoc.data();
                     window.businessId = userDoc.data().businessId;
                     window.userRole = userDoc.data().role;
+                    
+                    // Check access based on account type and trial status
+                    if (!hasAccess(window.currentUserData)) {
+                        showUpgradeModal();
+                    }
                 } else {
-                    // First time user - they become admin of their own business
+                    // First time user - they become admin with 14-day trial
+                    const trialEndsAt = new Date();
+                    trialEndsAt.setDate(trialEndsAt.getDate() + 14); // 14 days from now
+                    
                     window.businessId = user.uid;
                     window.userRole = 'admin';
                     window.currentUserData = {
                         email: user.email,
                         role: 'admin',
                         businessId: user.uid,
+                        accountType: 'trial',
+                        subscriptionStatus: 'trial',
+                        trialEndsAt: trialEndsAt.toISOString(),
                         createdAt: new Date().toISOString()
                     };
                     await setDoc(doc(db, 'users', user.uid), window.currentUserData);
@@ -1981,6 +1992,7 @@
                         role: 'user',
                         businessId: inviteData.businessId,
                         invitedBy: inviteData.invitedBy,
+                        accountType: 'inherited', // Team members inherit account status from business owner
                         createdAt: new Date().toISOString()
                     });
                     
@@ -2018,6 +2030,48 @@
                 alert('Login error: ' + error.message);
             }
         }
+
+        // Check if user has access based on account type
+        function hasAccess(userData) {
+            // Forever free accounts always have access
+            if (userData.accountType === 'free') return true;
+            
+            // Paid accounts with active subscription
+            if (userData.accountType === 'paid' && userData.subscriptionStatus === 'active') return true;
+            
+            // Trial accounts that haven't expired
+            if (userData.accountType === 'trial' && new Date() < new Date(userData.trialEndsAt)) return true;
+            
+            // Everyone else - no access
+            return false;
+        }
+
+        // Show upgrade modal when trial expires or payment fails
+        function showUpgradeModal() {
+            const userData = window.currentUserData;
+            let message = 'Your trial has expired. Please upgrade to continue using My Quick Quote.';
+            
+            if (userData.accountType === 'paid' && userData.subscriptionStatus === 'past_due') {
+                message = 'Your payment failed. Please update your payment method to continue.';
+            } else if (userData.accountType === 'paid' && userData.subscriptionStatus === 'canceled') {
+                message = 'Your subscription has been canceled. Resubscribe to continue using My Quick Quote.';
+            }
+            
+            if (confirm(message + '\n\nClick OK to upgrade now.')) {
+                // TODO: We'll add Stripe Checkout here next
+                alert('Stripe Checkout integration coming next!');
+            }
+        }
+
+        // Check access before actions (add service, create quote, etc)
+        async function checkAccessBeforeAction(actionName) {
+            if (!hasAccess(window.currentUserData)) {
+                showUpgradeModal();
+                return false;
+            }
+            return true;
+        }
+
 
         async function logout() {
             await signOut(auth);
