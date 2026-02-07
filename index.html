@@ -2034,9 +2034,24 @@
         }
 
         // Check if user has access based on account type
-        function hasAccess(userData) {
+        async function hasAccess(userData) {
             // Forever free accounts always have access
             if (userData.accountType === 'free') return true;
+            
+            // Inherited accounts (team members) - check the business owner's status
+            if (userData.accountType === 'inherited') {
+                // Get the business document to find the owner
+                const businessDoc = await getDoc(doc(db, 'businesses', userData.businessId));
+                if (businessDoc.exists()) {
+                    const ownerId = businessDoc.data().ownerId;
+                    const ownerDoc = await getDoc(doc(db, 'users', ownerId));
+                    if (ownerDoc.exists()) {
+                        // Recursively check owner's access (they might be 'free', 'paid', or 'trial')
+                        return hasAccess(ownerDoc.data());
+                    }
+                }
+                return false; // If we can't find owner, deny access
+            }
             
             // Paid accounts with active subscription
             if (userData.accountType === 'paid' && userData.subscriptionStatus === 'active') return true;
