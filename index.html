@@ -1906,7 +1906,8 @@
                     window.userRole = userDoc.data().role;
                     
                     // Check access based on account type and trial status
-                    if (!hasAccess(window.currentUserData)) {
+                    const userHasAccess = await hasAccess(window.currentUserData);
+                    if (!userHasAccess) {
                         showUpgradeModal();
                     }
                 } else {
