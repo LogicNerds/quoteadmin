@@ -2115,13 +2115,88 @@
             }
             
             if (confirm(message + '\n\nClick OK to upgrade now.')) {
-                await redirectToStripeCheckout();
+                showPlanSelectionModal();
             }
         }
 
+        // Show plan selection modal
+        function showPlanSelectionModal() {
+            // Remove existing modal if any
+            const existing = document.getElementById('planSelectionModal');
+            if (existing) existing.remove();
+            
+            const modal = document.createElement('div');
+            modal.id = 'planSelectionModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.85);
+                z-index: 10001;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; padding: 48px; border-radius: 16px; max-width: 800px; width: 100%;">
+                    <h2 style="font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 12px; text-align: center;">Choose Your Plan</h2>
+                    <p style="font-size: 16px; color: #64748b; margin-bottom: 32px; text-align: center;">Start your 14-day free trial. Cancel anytime.</p>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                        <!-- Monthly Plan -->
+                        <div onclick="selectPlan('monthly')" style="border: 2px solid #e2e8f0; border-radius: 12px; padding: 32px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#667eea'; this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
+                            <div style="font-size: 14px; font-weight: 600; color: #667eea; margin-bottom: 8px;">MONTHLY</div>
+                            <div style="font-size: 48px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">$29<span style="font-size: 18px; font-weight: 400; color: #64748b;">/mo</span></div>
+                            <div style="font-size: 14px; color: #64748b; margin-bottom: 24px;">Billed monthly</div>
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                <li style="padding: 8px 0; color: #0f172a; font-size: 14px;">✓ Unlimited quotes</li>
+                                <li style="padding: 8px 0; color: #0f172a; font-size: 14px;">✓ Unlimited services</li>
+                                <li style="padding: 8px 0; color: #0f172a; font-size: 14px;">✓ Up to 3 team members</li>
+                                <li style="padding: 8px 0; color: #0f172a; font-size: 14px;">✓ Custom branding</li>
+                                <li style="padding: 8px 0; color: #0f172a; font-size: 14px;">✓ 14-day free trial</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Annual Plan -->
+                        <div onclick="selectPlan('annual')" style="border: 2px solid #667eea; border-radius: 12px; padding: 32px; cursor: pointer; position: relative; background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <div style="position: absolute; top: -12px; right: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">SAVE $58</div>
+                            <div style="font-size: 14px; font-weight: 600; color: #667eea; margin-bottom: 8px;">ANNUAL</div>
+                            <div style="font-size: 48px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">$290<span style="font-size: 18px; font-weight: 400; color: #64748b;">/yr</span></div>
+                            <div style="font-size: 14px; color: #64748b; margin-bottom: 24px;">$24.17/month • Billed annually</div>
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                <li style="padding: 8px 0; color: #0f172a; font-size: 14px;">✓ Unlimited quotes</li>
+                                <li style="padding: 8px 0; color: #0f172a; font-size: 14px;">✓ Unlimited services</li>
+                                <li style="padding: 8px 0; color: #0f172a; font-size: 14px;">✓ Up to 3 team members</li>
+                                <li style="padding: 8px 0; color: #0f172a; font-size: 14px;">✓ Custom branding</li>
+                                <li style="padding: 8px 0; color: #0f172a; font-size: 14px;">✓ 14-day free trial</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <button onclick="document.getElementById('planSelectionModal').remove()" style="width: 100%; background: transparent; color: #64748b; border: none; padding: 12px; font-size: 14px; cursor: pointer; text-decoration: underline;">Cancel</button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        // Select plan and proceed to checkout
+        function selectPlan(plan) {
+            const priceId = plan === 'monthly' 
+                ? 'price_1Sw3llP4y5D6LCmHqko2iUCs'  // Monthly
+                : 'price_1Sw3kjP4y5D6LCmHUV41Zkd3'; // Annual
+            
+            document.getElementById('planSelectionModal').remove();
+            redirectToStripeCheckout(priceId);
+        }
+
         // Redirect to Stripe Checkout
-        async function redirectToStripeCheckout() {
-            console.log('redirectToStripeCheckout called');
+        async function redirectToStripeCheckout(priceId = 'price_1Sw3llP4y5D6LCmHqko2iUCs') {
+            console.log('redirectToStripeCheckout called with priceId:', priceId);
             try {
                 console.log('Calling Cloud Function...');
                 // Call Cloud Function to create checkout session
@@ -2133,7 +2208,7 @@
                     body: JSON.stringify({
                         userId: window.currentUser.uid,
                         email: window.currentUser.email,
-                        priceId: 'price_1Sw3llP4y5D6LCmHqko2iUCs' // Your monthly price ID
+                        priceId: priceId
                     })
                 });
                 
@@ -2218,7 +2293,7 @@
                                 <div style="font-weight: 600; font-size: 16px;">Free Trial - ${daysLeft} ${daysLeft === 1 ? 'Day' : 'Days'} Remaining</div>
                                 <div style="font-size: 14px; opacity: 0.9;">Your trial ends on ${trialEnd.toLocaleDateString()}. Upgrade to keep using My Quick Quote.</div>
                             </div>
-                            <button onclick="redirectToStripeCheckout()" style="background: white; color: #d97706; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap;">Upgrade Now</button>
+                            <button onclick="showPlanSelectionModal()" style="background: white; color: #d97706; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap;">Upgrade Now</button>
                         </div>
                     `;
                 } else {
@@ -2229,7 +2304,7 @@
                                 <div style="font-weight: 600; font-size: 16px;">Trial Expired</div>
                                 <div style="font-size: 14px; opacity: 0.9;">Your trial has ended. Upgrade now to continue using My Quick Quote.</div>
                             </div>
-                            <button onclick="redirectToStripeCheckout()" style="background: white; color: #ef4444; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap;">Upgrade Now</button>
+                            <button onclick="showPlanSelectionModal()" style="background: white; color: #ef4444; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap;">Upgrade Now</button>
                         </div>
                     `;
                 }
@@ -2245,7 +2320,7 @@
                             <div style="font-weight: 600; font-size: 16px;">Payment Failed</div>
                             <div style="font-size: 14px; opacity: 0.9;">Your payment couldn't be processed. Please update your payment method.</div>
                         </div>
-                        <button onclick="redirectToStripeCheckout()" style="background: white; color: #ef4444; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap;">Update Payment</button>
+                        <button onclick="showPlanSelectionModal()" style="background: white; color: #ef4444; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap;">Update Payment</button>
                     </div>
                 `;
                 return;
@@ -2259,7 +2334,7 @@
                             <div style="font-weight: 600; font-size: 16px;">Subscription Canceled</div>
                             <div style="font-size: 14px; opacity: 0.9;">Your subscription has been canceled. Resubscribe to continue.</div>
                         </div>
-                        <button onclick="redirectToStripeCheckout()" style="background: white; color: #64748b; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap;">Resubscribe</button>
+                        <button onclick="showPlanSelectionModal()" style="background: white; color: #64748b; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap;">Resubscribe</button>
                     </div>
                 `;
             }
@@ -2292,8 +2367,8 @@
                         <p style="font-size: 16px; color: #64748b; margin-bottom: 32px; line-height: 1.6;">
                             Your trial has expired. Upgrade now to continue using My Quick Quote and manage your quote calculator.
                         </p>
-                        <button onclick="redirectToStripeCheckout()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 16px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 12px;">
-                            Upgrade to Pro - $29/month
+                        <button onclick="showPlanSelectionModal()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 16px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 12px;">
+                            Upgrade to Pro
                         </button>
                         <button onclick="logout()" style="background: transparent; color: #64748b; border: none; padding: 12px; font-size: 14px; cursor: pointer; text-decoration: underline;">
                             Sign Out
@@ -3883,6 +3958,8 @@ window.addEventListener('message', function(e) {
         window.importSetup = importSetup;
         window.showForgotPassword = showForgotPassword;
         window.redirectToStripeCheckout = redirectToStripeCheckout;
+        window.showPlanSelectionModal = showPlanSelectionModal;
+        window.selectPlan = selectPlan;
 
         // Import storage functions for global use
         window.storageRef = ref;
