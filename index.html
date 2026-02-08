@@ -2122,9 +2122,6 @@
         // Redirect to Stripe Checkout
         async function redirectToStripeCheckout() {
             try {
-                // Initialize Stripe with your publishable key
-                const stripe = Stripe('pk_test_51Sw3d9P4y5D6LCmHcwXgbJKOagQoY8dCHnJntksO1lR5JTFKaNvwP4soH9EIle6CxF5rPtcAvxoxiVN1luNx0c9e004M1FuS');
-                
                 // Call Cloud Function to create checkout session
                 const response = await fetch('https://us-central1-quickquote-aaf57.cloudfunctions.net/createCheckoutSession', {
                     method: 'POST',
@@ -2138,20 +2135,18 @@
                     })
                 });
                 
-                const session = await response.json();
+                const data = await response.json();
                 
-                if (session.error) {
-                    alert('Error: ' + session.error);
+                if (data.error) {
+                    alert('Error: ' + data.error);
                     return;
                 }
                 
-                // Redirect to Stripe Checkout
-                const result = await stripe.redirectToCheckout({
-                    sessionId: session.sessionId
-                });
-                
-                if (result.error) {
-                    alert('Error: ' + result.error.message);
+                // Redirect directly to the checkout URL
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    alert('Error: No checkout URL returned');
                 }
             } catch (error) {
                 console.error('Checkout error:', error);
