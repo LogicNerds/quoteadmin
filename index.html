@@ -1962,6 +1962,25 @@
             }
         });
 
+        // Handle checkout success/cancel from URL params
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const checkoutStatus = urlParams.get('checkout');
+            
+            if (checkoutStatus === 'success') {
+                // Remove the query param
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                // Show success message
+                setTimeout(() => {
+                    alert('🎉 Welcome to My Quick Quote Pro!\n\nYour subscription is now active. Thank you for upgrading!\n\nYou now have unlimited access to all features.');
+                }, 500);
+            } else if (checkoutStatus === 'canceled') {
+                // Remove the query param
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
+
         // Auth Functions
         async function signup() {
             const email = document.getElementById('authEmail').value;
@@ -2235,6 +2254,37 @@
             }
         }
 
+        // Open Stripe Billing Portal
+        async function openBillingPortal() {
+            try {
+                const response = await fetch('https://us-central1-quickquote-aaf57.cloudfunctions.net/createPortalSession', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: window.currentUser.uid
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    alert('Error: Could not open billing portal');
+                }
+            } catch (error) {
+                console.error('Billing portal error:', error);
+                alert('Error opening billing portal: ' + error.message);
+            }
+        }
+
         // Check access before actions (add service, create quote, etc)
         async function checkAccessBeforeAction(actionName) {
             if (!hasAccess(window.currentUserData)) {
@@ -2274,6 +2324,7 @@
                             <div style="font-weight: 600; font-size: 16px;">Active Subscription</div>
                             <div style="font-size: 14px; opacity: 0.9;">Your subscription is active. Thank you for being a customer!</div>
                         </div>
+                        <button onclick="openBillingPortal()" style="background: white; color: #10b981; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap;">Manage Billing</button>
                     </div>
                 `;
                 return;
@@ -3960,6 +4011,7 @@ window.addEventListener('message', function(e) {
         window.redirectToStripeCheckout = redirectToStripeCheckout;
         window.showPlanSelectionModal = showPlanSelectionModal;
         window.selectPlan = selectPlan;
+        window.openBillingPortal = openBillingPortal;
 
         // Import storage functions for global use
         window.storageRef = ref;
