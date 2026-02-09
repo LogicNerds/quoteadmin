@@ -2206,15 +2206,15 @@
         // Select plan and proceed to checkout
         function selectPlan(plan) {
             const priceId = plan === 'monthly' 
-                ? 'price_1Sw3llP4y5D6LCmHqko2iUCs'  // Monthly
-                : 'price_1Sw3kjP4y5D6LCmHUV41Zkd3'; // Annual
+                ? 'price_1SyiRB1VfNAdKrteQuOWDiHG'  // Monthly - LIVE
+                : 'price_1SyiRB1VfNAdKrte27woWdSO'; // Annual - LIVE
             
             document.getElementById('planSelectionModal').remove();
             redirectToStripeCheckout(priceId);
         }
 
         // Redirect to Stripe Checkout
-        async function redirectToStripeCheckout(priceId = 'price_1Sw3llP4y5D6LCmHqko2iUCs') {
+        async function redirectToStripeCheckout(priceId = 'price_1SyiRB1VfNAdKrteQuOWDiHG') {
             console.log('redirectToStripeCheckout called with priceId:', priceId);
             try {
                 console.log('Calling Cloud Function...');
