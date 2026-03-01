@@ -2501,15 +2501,17 @@
             try {
                 await setDoc(doc(db, 'businesses', window.businessId), quotePageData, { merge: true });
                 
-                // Refresh the iframe preview
-                const iframe = document.getElementById('calculatorIframe');
-                if (iframe && iframe.src) {
-                    // Add timestamp to force refresh
-                    const currentSrc = iframe.src.split('?')[0];
-                    iframe.src = currentSrc + '?t=' + new Date().getTime();
-                }
-                
                 alert('✓ Quote page saved successfully!');
+                
+                // Wait a moment for Firestore to propagate, then refresh the iframe
+                setTimeout(() => {
+                    const iframe = document.getElementById('calculatorIframe');
+                    if (iframe && iframe.src) {
+                        // Add timestamp to force refresh
+                        const currentSrc = iframe.src.split('?')[0];
+                        iframe.src = currentSrc + '?t=' + new Date().getTime();
+                    }
+                }, 1000);
             } catch (error) {
                 alert('Error saving: ' + error.message);
             }
