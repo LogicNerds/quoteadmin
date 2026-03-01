@@ -1619,6 +1619,11 @@
                         <div class="modal-body" style="line-height: 1.8;">
                             <div style="background: #f0f4ff; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
                                 <strong>Welcome!</strong> Follow these simple steps to get your quote calculator up and running in minutes.
+                                <div style="margin-top: 12px;">
+                                    <a href="https://www.youtube.com/watch?v=Ry_GEn0i6Jo" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;">
+                                        🎥 Visual learner? Check out our quick setup video!
+                                    </a>
+                                </div>
                             </div>
 
                             <div style="margin-bottom: 24px;">
@@ -1770,9 +1775,16 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label>Embed Code</label>
+                                    <label>Embed Code (iFrame)</label>
                                     <div class="url-display" id="embedCode" style="font-size: 11px; line-height: 1.6; margin-bottom: 10px;">Loading...</div>
-                                    <button class="btn btn-primary btn-sm" onclick="copyEmbedCode()">Copy Embed Code</button>
+                                    <button class="btn btn-primary btn-sm" onclick="copyEmbedCode()">Copy iFrame Code</button>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Pop-up Widget Code</label>
+                                    <p class="label-hint" style="margin-bottom: 8px;">Floating button in bottom-right corner (like a chatbot)</p>
+                                    <div class="url-display" id="popupCode" style="font-size: 11px; line-height: 1.6; margin-bottom: 10px;">Loading...</div>
+                                    <button class="btn btn-primary btn-sm" onclick="copyPopupCode()">Copy Pop-up Code</button>
                                 </div>
                             </div>
                         </div>
@@ -2488,6 +2500,15 @@
 
             try {
                 await setDoc(doc(db, 'businesses', window.businessId), quotePageData, { merge: true });
+                
+                // Refresh the iframe preview
+                const iframe = document.getElementById('calculatorIframe');
+                if (iframe && iframe.src) {
+                    // Add timestamp to force refresh
+                    const currentSrc = iframe.src.split('?')[0];
+                    iframe.src = currentSrc + '?t=' + new Date().getTime();
+                }
+                
                 alert('✓ Quote page saved successfully!');
             } catch (error) {
                 alert('Error saving: ' + error.message);
@@ -3012,6 +3033,53 @@ window.addEventListener('message', function(e) {
 </scr` + `ipt>`;
             document.getElementById('embedCode').textContent = embedCode;
             
+            // Generate pop-up widget code
+            const popupCode = `<!-- My Quick Quote Pop-up Widget -->
+<div id="mqq-widget-container"></div>
+<scr` + `ipt>
+(function() {
+  const container = document.getElementById('mqq-widget-container');
+  
+  // Create button
+  const button = document.createElement('button');
+  button.id = 'mqq-widget-btn';
+  button.innerHTML = '💬 Get Quote';
+  button.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 16px 24px; border-radius: 50px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); z-index: 9998; transition: transform 0.2s;';
+  button.onmouseover = () => button.style.transform = 'scale(1.05)';
+  button.onmouseout = () => button.style.transform = 'scale(1)';
+  
+  // Create iframe popup
+  const popup = document.createElement('div');
+  popup.id = 'mqq-widget-popup';
+  popup.style.cssText = 'position: fixed; bottom: 90px; right: 20px; width: 400px; height: 600px; max-width: calc(100vw - 40px); max-height: calc(100vh - 120px); background: white; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); z-index: 9999; display: none; overflow: hidden;';
+  
+  const iframe = document.createElement('iframe');
+  iframe.src = '${calculatorUrl}';
+  iframe.style.cssText = 'width: 100%; height: 100%; border: none; border-radius: 12px;';
+  iframe.frameBorder = '0';
+  
+  popup.appendChild(iframe);
+  container.appendChild(button);
+  container.appendChild(popup);
+  
+  // Toggle popup
+  button.onclick = () => {
+    const isOpen = popup.style.display === 'block';
+    popup.style.display = isOpen ? 'none' : 'block';
+    button.innerHTML = isOpen ? '💬 Get Quote' : '✕ Close';
+  };
+  
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    if (!container.contains(e.target) && popup.style.display === 'block') {
+      popup.style.display = 'none';
+      button.innerHTML = '💬 Get Quote';
+    }
+  });
+})();
+</scr` + `ipt>`;
+            document.getElementById('popupCode').textContent = popupCode;
+            
             // Update iframe preview
             document.getElementById('calculatorIframe').src = calculatorUrl;
         }
@@ -3026,6 +3094,12 @@ window.addEventListener('message', function(e) {
             const code = document.getElementById('embedCode').textContent;
             navigator.clipboard.writeText(code);
             alert('✓ Embed code copied to clipboard!');
+        }
+
+        function copyPopupCode() {
+            const code = document.getElementById('popupCode').textContent;
+            navigator.clipboard.writeText(code);
+            alert('✓ Pop-up widget code copied to clipboard!');
         }
 
         function openCalculator() {
@@ -4012,6 +4086,7 @@ window.addEventListener('message', function(e) {
         window.showPlanSelectionModal = showPlanSelectionModal;
         window.selectPlan = selectPlan;
         window.openBillingPortal = openBillingPortal;
+        window.copyPopupCode = copyPopupCode;
 
         // Import storage functions for global use
         window.storageRef = ref;
