@@ -1277,6 +1277,9 @@
             }
         }
     </style>
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 </head>
 <body>
     <!-- Auth Section -->
@@ -1738,12 +1741,12 @@
 
                                 <div class="form-group">
                                     <label>Welcome Message <span class="label-hint">(optional)</span></label>
-                                    <textarea id="landingMessage" rows="4" placeholder="Tell customers about your services..."></textarea>
+                                    <div id="landingMessage" style="background: white; min-height: 120px;"></div>
                                 </div>
 
                                 <div class="form-group">
                                     <label>Services Disclaimer <span class="label-hint">(optional - shown in Select Services section)</span></label>
-                                    <textarea id="servicesDisclaimer" rows="2" placeholder="Example: Additional $50 charge for vans or larger vehicles"></textarea>
+                                    <div id="servicesDisclaimer" style="background: white; min-height: 80px;"></div>
                                 </div>
 
                                 <div class="form-group">
@@ -2492,8 +2495,8 @@
 
             const quotePageData = {
                 landingHeadline: document.getElementById('landingHeadline').value,
-                landingMessage: document.getElementById('landingMessage').value,
-                servicesDisclaimer: document.getElementById('servicesDisclaimer').value,
+                landingMessage: landingMessageEditor.root.innerHTML,
+                servicesDisclaimer: servicesDisclaimerEditor.root.innerHTML,
                 landingTextColor: document.getElementById('landingTextColor').value,
                 updatedAt: new Date().toISOString()
             };
@@ -2998,8 +3001,15 @@
                     
                     // Load landing page data
                     document.getElementById('landingHeadline').value = data.landingHeadline || '';
-                    document.getElementById('landingMessage').value = data.landingMessage || '';
-                    document.getElementById('servicesDisclaimer').value = data.servicesDisclaimer || '';
+                    
+                    // Set Quill editor content
+                    if (landingMessageEditor) {
+                        landingMessageEditor.root.innerHTML = data.landingMessage || '';
+                    }
+                    if (servicesDisclaimerEditor) {
+                        servicesDisclaimerEditor.root.innerHTML = data.servicesDisclaimer || '';
+                    }
+                    
                     document.getElementById('landingTextColor').value = data.landingTextColor || '#1f2937';
                     document.getElementById('landingTextColorHex').value = data.landingTextColor || '#1f2937';
                     
@@ -4094,6 +4104,39 @@ window.addEventListener('message', function(e) {
         window.storageRef = ref;
         window.uploadBytesResumable = uploadBytesResumable;
         window.getDownloadURL = getDownloadURL;
+
+        // Initialize Quill Rich Text Editors
+        let landingMessageEditor;
+        let servicesDisclaimerEditor;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Welcome Message editor
+            landingMessageEditor = new Quill('#landingMessage', {
+                theme: 'snow',
+                placeholder: 'Tell customers about your services...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['link'],
+                        ['clean']
+                    ]
+                }
+            });
+            
+            // Initialize Services Disclaimer editor
+            servicesDisclaimerEditor = new Quill('#servicesDisclaimer', {
+                theme: 'snow',
+                placeholder: 'Example: Additional $50 charge for vans or larger vehicles',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['clean']
+                    ]
+                }
+            });
+        });
 
         // Color preview updates
         document.getElementById('primaryColor')?.addEventListener('input', (e) => {
