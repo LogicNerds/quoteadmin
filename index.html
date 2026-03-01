@@ -1669,6 +1669,95 @@
                     </div>
                 </div>
 
+                <!-- Pop-up Widget Install Guide Modal -->
+                <div id="popupInstallModal" class="modal hidden">
+                    <div class="modal-content" style="max-width: 700px;">
+                        <div class="modal-header">
+                            <h2>Where to Install Your Pop-up Widget</h2>
+                            <button class="modal-close" onclick="closePopupInstallGuide()">×</button>
+                        </div>
+                        <div class="modal-body" style="line-height: 1.8;">
+                            <div style="background: #f0f4ff; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                                <strong>Quick Answer:</strong> Paste the code right before the closing <code>&lt;/body&gt;</code> tag on your website.
+                            </div>
+
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="color: var(--primary); margin-bottom: 8px;">WordPress</h3>
+                                <p style="margin-bottom: 8px;"><strong>Option 1:</strong> Use a plugin like "Insert Headers and Footers"</p>
+                                <ul style="margin-left: 20px; margin-bottom: 8px;">
+                                    <li>Install the plugin from WordPress admin</li>
+                                    <li>Go to Settings → Insert Headers and Footers</li>
+                                    <li>Paste code in "Scripts in Footer" section</li>
+                                </ul>
+                                <p style="margin-bottom: 8px;"><strong>Option 2:</strong> Edit theme files directly</p>
+                                <ul style="margin-left: 20px;">
+                                    <li>Appearance → Theme Editor</li>
+                                    <li>Open footer.php</li>
+                                    <li>Paste code before <code>&lt;/body&gt;</code></li>
+                                </ul>
+                            </div>
+
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="color: var(--primary); margin-bottom: 8px;">Wix</h3>
+                                <ul style="margin-left: 20px;">
+                                    <li>Settings → Custom Code</li>
+                                    <li>Click "Add Custom Code"</li>
+                                    <li>Paste your code</li>
+                                    <li>Select "Body - end"</li>
+                                    <li>Apply to all pages</li>
+                                </ul>
+                            </div>
+
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="color: var(--primary); margin-bottom: 8px;">Squarespace</h3>
+                                <ul style="margin-left: 20px;">
+                                    <li>Settings → Advanced → Code Injection</li>
+                                    <li>Paste code in "Footer" section</li>
+                                    <li>Click Save</li>
+                                </ul>
+                            </div>
+
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="color: var(--primary); margin-bottom: 8px;">Shopify</h3>
+                                <ul style="margin-left: 20px;">
+                                    <li>Online Store → Themes</li>
+                                    <li>Click "Actions" → "Edit Code"</li>
+                                    <li>Open theme.liquid file</li>
+                                    <li>Paste code before <code>&lt;/body&gt;</code></li>
+                                    <li>Click Save</li>
+                                </ul>
+                            </div>
+
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="color: var(--primary); margin-bottom: 8px;">Weebly</h3>
+                                <ul style="margin-left: 20px;">
+                                    <li>Settings → SEO</li>
+                                    <li>Scroll to "Footer Code"</li>
+                                    <li>Paste your code</li>
+                                    <li>Click Save</li>
+                                </ul>
+                            </div>
+
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="color: var(--primary); margin-bottom: 8px;">Custom HTML Site</h3>
+                                <ul style="margin-left: 20px;">
+                                    <li>Open your HTML file in a text editor</li>
+                                    <li>Find the <code>&lt;/body&gt;</code> tag (near the bottom)</li>
+                                    <li>Paste code right before it</li>
+                                    <li>Save and upload to your server</li>
+                                </ul>
+                            </div>
+
+                            <div style="background: #d1fae5; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                                <strong>Need help?</strong> Contact your website developer or hosting support - they can install this in 2 minutes!
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" onclick="closePopupInstallGuide()">Got It!</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Invite Team Member Modal -->
                 <div id="inviteTeamModal" class="modal hidden">
                     <div class="modal-content">
@@ -1787,7 +1876,10 @@
                                     <label>Pop-up Widget Code</label>
                                     <p class="label-hint" style="margin-bottom: 8px;">Floating button in bottom-right corner (like a chatbot)</p>
                                     <div class="url-display" id="popupCode" style="font-size: 11px; line-height: 1.6; margin-bottom: 10px;">Loading...</div>
-                                    <button class="btn btn-primary btn-sm" onclick="copyPopupCode()">Copy Pop-up Code</button>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <button class="btn btn-primary btn-sm" onclick="copyPopupCode()">Copy Pop-up Code</button>
+                                        <a href="#" onclick="showPopupInstallGuide(); return false;" style="color: var(--primary); text-decoration: none; font-size: 13px; font-weight: 500;">Where do I put this?</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -3691,6 +3783,14 @@ window.addEventListener('message', function(e) {
             document.getElementById('setupGuideModal').classList.add('hidden');
         }
 
+        function showPopupInstallGuide() {
+            document.getElementById('popupInstallModal').classList.remove('hidden');
+        }
+
+        function closePopupInstallGuide() {
+            document.getElementById('popupInstallModal').classList.add('hidden');
+        }
+
         // Team Management Functions
         async function loadTeamMembers() {
             if (!window.businessId) return;
@@ -4099,6 +4199,8 @@ window.addEventListener('message', function(e) {
         window.selectPlan = selectPlan;
         window.openBillingPortal = openBillingPortal;
         window.copyPopupCode = copyPopupCode;
+        window.showPopupInstallGuide = showPopupInstallGuide;
+        window.closePopupInstallGuide = closePopupInstallGuide;
 
         // Import storage functions for global use
         window.storageRef = ref;
